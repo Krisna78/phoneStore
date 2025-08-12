@@ -1,31 +1,17 @@
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Head, Link, router } from '@inertiajs/react';
-import { Search, ShoppingCart } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { Head, Link} from '@inertiajs/react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 type CategoryItem = { id: number; label: string; image: string; };
-type ProductItem = { id: number; name: string; price: number; originalPrice: number; discount: number; image: string; };
+type ProductItem = { id_product: number; name: string; price: number; originalPrice: number; discount: number; image: string; };
 
 type HomepageProps = {
   user: { name: string } | null;
+  products: ProductItem[];
 };
 
-export default function Homepage({ user }: HomepageProps) {
-  const [showSearch, setShowSearch] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
+export default function Homepage({ user,products }: HomepageProps) {
   const categories: CategoryItem[] = [
     {
       id: 1,
@@ -54,129 +40,26 @@ export default function Homepage({ user }: HomepageProps) {
     },
   ];
 
-  const products: ProductItem[] = Array(10).fill({
-    id: 1,
-    name: 'Infinix Smart 10 Plus 8/128GB - Black',
-    price: 1750000,
-    originalPrice: 2500000,
-    discount: 30,
-    image: 'https://fdn2.gsmarena.com/vv/pics/infinix/infinix-smart-8-1.jpg',
-  }).map((item, index) => ({ ...item, id: index + 1 }));
+  const formatPrice = (price: number | string): string => {
+    const numPrice = typeof price === 'string' ? Number(price) : price;
 
-  const formatPrice = (price: number): string => {
+    if (isNaN(numPrice)) {
+        return 'Rp. -';
+    }
+
     return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      maximumFractionDigits: 0,
-    }).format(price).replace('Rp', 'Rp. ');
-  };
-
-  function handleLogout() {
-    router.post(route('logout'));
-    setDropdownOpen(false);
-  }
+        style: 'currency',
+        currency: 'IDR',
+        maximumFractionDigits: 0,
+    }).format(numPrice).replace('Rp', 'Rp. ');
+    };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Head title='PhoneStore - Belanja Gadget Terbaik' />
 
       {/* Header */}
-      <header className="sticky top-0 z-10 flex flex-col items-center justify-between gap-3 bg-blue-600 px-4 py-3 text-white shadow-md md:flex-row md:gap-0 md:px-6">
-        <Link href="/" className="text-xl font-bold hover:text-blue-100">
-          PhoneStore
-        </Link>
-
-        {/* Search Bar */}
-        <div className="w-full max-w-xl md:mx-6 md:flex-1">
-          <div className="relative hidden w-full md:block">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-600" />
-            <Input
-              type="text"
-              placeholder="Cari Smartphone, Tablet, Laptop..."
-              className="w-full bg-white py-2 pl-10 pr-4 text-sm text-gray-800 placeholder-gray-400 focus-visible:ring-2 focus-visible:ring-blue-500"
-            />
-          </div>
-
-          {showSearch && (
-            <div className="relative mt-2 w-full animate-fade-in md:hidden">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-600" />
-              <Input
-                type="text"
-                placeholder="Cari Smartphone, Tablet, Laptop..."
-                className="w-full bg-white py-2 pl-10 pr-4 text-sm text-gray-800"
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 md:gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-white hover:bg-blue-500 md:hidden"
-            onClick={() => setShowSearch(!showSearch)}
-            aria-label="Search"
-          >
-            <Search className="h-5 w-5" />
-          </Button>
-
-          <Button variant="ghost" size="icon" className="text-white hover:bg-blue-500" aria-label="Cart">
-            <ShoppingCart className="h-5 w-5" />
-            <span className="sr-only">Keranjang Belanja</span>
-          </Button>
-
-          {/* User login/logout */}
-          {user ? (
-            <div className="relative" ref={dropdownRef}>
-              <Button
-                variant="outline"
-                className="flex items-center gap-2 border-white bg-white px-4 text-blue-600 hover:bg-blue-100 md:inline-flex"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-              >
-                {user.name}
-                <svg
-                  className={`h-4 w-4 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </Button>
-
-              {dropdownOpen && (
-                <div className="absolute right-0 z-20 mt-2 w-40 rounded-md border border-gray-200 bg-white shadow-lg">
-                  <Link
-                    href="/settings"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    Settings
-                  </Link>
-                  <button
-                    type="button"
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <>
-              <Button asChild variant="outline" className="hidden border-white bg-white px-4 text-blue-600 hover:bg-blue-100 md:inline-flex">
-                <Link href={route('register')}>Daftar</Link>
-              </Button>
-
-              <Button asChild className="hidden bg-blue-700 px-4 text-white hover:bg-blue-800 md:inline-flex">
-                <Link href={route('login')}>Login</Link>
-              </Button>
-            </>
-          )}
-        </div>
-      </header>
+      <Header user={user}/>
 
       {/* Hero Banner */}
       <section className="relative aspect-[16/6] w-full overflow-hidden bg-gray-200">
@@ -227,42 +110,44 @@ export default function Homepage({ user }: HomepageProps) {
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="group overflow-hidden rounded-lg bg-white shadow-sm transition-all hover:shadow-md"
+        {products.map((product) => {
+            return (
+            <Link
+                key={product.id_product}
+                href={route('products.show', { id: product.id_product})}
+                className="group overflow-hidden rounded-lg bg-white shadow-sm transition-all hover:shadow-md"
             >
-              <div className="relative aspect-square overflow-hidden">
+                <div className="relative aspect-square overflow-hidden">
                 <img
-                  src={product.image}
-                  alt={product.name}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading="lazy"
+                    src={product.image}
+                    alt={product.name}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    loading="lazy"
                 />
                 {product.discount > 0 && (
-                  <span className="absolute left-2 top-2 rounded bg-yellow-400 px-2 py-1 text-xs font-bold">
+                    <span className="absolute left-2 top-2 rounded bg-yellow-400 px-2 py-1 text-xs font-bold">
                     {product.discount}% off
-                  </span>
+                    </span>
                 )}
-              </div>
+                </div>
 
-              <div className="p-3">
+                <div className="p-3">
                 <h3 className="line-clamp-2 text-sm font-semibold leading-tight text-gray-800">
-                  {product.name}
+                    {product.name}
                 </h3>
                 <div className="mt-2">
-                  <p className="font-bold text-blue-600">
-                    {formatPrice(product.price)}
-                  </p>
-                  <p className="text-xs text-gray-400 line-through">
+                    <p className="font-bold text-blue-600">{formatPrice(product.price)}</p>
+                    <p className="text-xs text-gray-400 line-through hidden">
                     {formatPrice(product.originalPrice)}
-                  </p>
+                    </p>
                 </div>
-              </div>
-            </div>
-          ))}
+                </div>
+            </Link>
+            );
+        })}
         </div>
       </section>
+      <Footer/>
     </div>
   );
 }

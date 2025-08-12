@@ -33,6 +33,9 @@ export function LoginForm({
         e.preventDefault();
         post(route('login'), {
             onFinish: () => reset('password'),
+            onSuccess: () => {
+                window.location.href = route('homepage');
+            }
         });
     };
 

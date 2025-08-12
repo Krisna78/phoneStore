@@ -17,6 +17,22 @@ class ProductController extends Controller
         $products = Product::with(['merk', 'category'])->get();
         return Inertia::render("admin/products/product", ["products" => $products]);
     }
+    public function featuredProducts($limit = 5)
+    {
+        $products = Product::with(['merk', 'category'])
+            ->latest()
+            ->limit($limit)
+            ->get();
+
+        $products->transform(function ($product) {
+            if ($product->image) {
+                $product->image = \Illuminate\Support\Facades\Storage::url($product->image);
+            }
+            return $product;
+        });
+
+        return Inertia::render("admin/products/product", ["products" => $products]);
+    }
     public function create()
     {
         $merk = Merk::all();
@@ -93,5 +109,15 @@ class ProductController extends Controller
         return response()->json([
             'message' => 'Product berhasil dihapus'
         ], 200);
+    }
+    public function detailProduct($id) {
+        $product = Product::with('merk', 'category')->findOrFail($id);
+        $merk = Merk::all();
+        $category = Category::all();
+        return Inertia::render("products/detail-product", [
+            "product" => $product,
+            'merk' => $merk,
+            'category' => $category,
+        ]);
     }
 }
