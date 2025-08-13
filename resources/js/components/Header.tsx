@@ -7,9 +7,10 @@ import { useState, useRef, useEffect } from 'react';
 
 type HeaderProps = {
   user: { name: string } | null;
+  cartItemCount?: number;
 };
 
-export default function Header({ user }: HeaderProps) {
+export default function Header({ user, cartItemCount = 0}: HeaderProps) {
   const [showSearch, setShowSearch] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -31,6 +32,9 @@ export default function Header({ user }: HeaderProps) {
   function handleLoginClick(e: React.MouseEvent) {
     e.preventDefault();
     router.visit(route('login'));
+  }
+  function handleCartClick() {
+    router.visit(route('carts.index'));
   }
 
   return (
@@ -72,9 +76,25 @@ export default function Header({ user }: HeaderProps) {
           <Search className="h-5 w-5" />
         </Button>
 
-        <Button variant="ghost" size="icon" className="text-white hover:bg-blue-500">
-          <ShoppingCart className="h-5 w-5" />
-        </Button>
+        {user && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative text-white bg-white"
+            onClick={handleCartClick}
+            aria-label="Cart"
+          >
+            <ShoppingCart className="h-5 w-5 text-blue-500"/>
+            {cartItemCount > 0 && (
+              <span
+                className="absolute -top-1 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white"
+                aria-label={`${cartItemCount} items in cart`}
+              >
+                {cartItemCount}
+              </span>
+            )}
+          </Button>
+        )}
 
         {user ? (
           <div className="relative" ref={dropdownRef}>

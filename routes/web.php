@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CartController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -31,6 +32,12 @@ Route::middleware(['auth',"role:admin"])->group(function () {
 Route::get('/',[HomeController::class,'homePage'])->name('homepage');
 Route::controller(ProductController::class)->group(function() {
     Route::get('/detail_product/{id}','detailProduct')->name('products.show');
+});
+Route::controller(CartController::class)->group(function () {
+    Route::get('/cart','index')->name('carts.index');
+    Route::post('/cart/add', 'addToCart')->name("carts.add")->middleware('auth');
+    Route::delete('/cart/item/{id}','destroy')->name('carts.destroy');
+    Route::post('/card/update/{id}','update')->name('carts.update');
 });
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

@@ -10,7 +10,7 @@ use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         $category = Category::all();
         return Inertia::render('category.index', ['category' => $category]);

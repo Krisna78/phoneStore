@@ -59,7 +59,7 @@ export default function Homepage({ user,products }: HomepageProps) {
       <Head title='PhoneStore - Belanja Gadget Terbaik' />
 
       {/* Header */}
-      <Header user={user}/>
+      <Header user={user} cartItemCount={products.length}/>
 
       {/* Hero Banner */}
       <section className="relative aspect-[16/6] w-full overflow-hidden bg-gray-200">

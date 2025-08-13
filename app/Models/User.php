@@ -20,6 +20,7 @@ class User extends Authenticatable
     // HasApiTokens
 
     protected $primaryKey = 'id_user';
+    protected $table = 'users';
     public $incrementing = false;
     protected $keyType = 'string';
 
