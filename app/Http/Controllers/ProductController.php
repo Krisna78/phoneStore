@@ -35,8 +35,8 @@ class ProductController extends Controller
     }
     public function create()
     {
-        $merk = Merk::all();
-        $category = Category::all();
+        $merk = Merk::select('id_merk', 'merk_name')->get();
+        $category = Category::select('id_category', 'category_name')->get();
         return Inertia::render('admin/products/add-product', [
             'merk' => $merk,
             'category' => $category,
@@ -110,10 +110,11 @@ class ProductController extends Controller
             'message' => 'Product berhasil dihapus'
         ], 200);
     }
-    public function detailProduct($id) {
+    public function detailProduct($id)
+    {
         $product = Product::with('merk', 'category')->findOrFail($id);
-        $merk = Merk::all();
-        $category = Category::all();
+        $merk = Merk::select('id_merk', 'merk_name')->get();
+        $category = Category::select('id_category', 'category_name')->get();
         return Inertia::render("products/detail-product", [
             "product" => $product,
             'merk' => $merk,

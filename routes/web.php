@@ -5,6 +5,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -22,11 +23,6 @@ Route::middleware(['auth',"role:admin"])->group(function () {
     });
     Route::controller(InvoiceController::class)->group(function() {
         Route::get('/invoice','index')->name('invoice.index');
-        // Route::get('/invoice/add','create')->name('invoice.create');
-        // Route::post('/invoice/store','store')->name('invoice.store');
-        // Route::get('/invoice/{id}/edit','edit')->name('invoice.edit');
-        // Route::put('/invoice/{id}/update','update')->name('invoice.update');
-        // Route::delete('/invoice/{id}','destroy')->name('invoice.destroy');
     });
 });
 Route::get('/',[HomeController::class,'homePage'])->name('homepage');
@@ -39,5 +35,15 @@ Route::controller(CartController::class)->group(function () {
     Route::delete('/cart/item/{id}','destroy')->name('carts.destroy');
     Route::post('/card/update/{id}','update')->name('carts.update');
 });
+Route::controller(InvoiceController::class)->group(function () {
+    Route::post('/invoice/create','createInvoice')->name('invoice.create');
+    Route::post('/invoice/create-pay','createInvoicePay')->name('invoice.createPay');
+    Route::post('/invoice/webhook', 'webhook')->name('invoice.webhook');
+    Route::get('/invoice/receipt/{external_id}', 'receipt')->name('invoice.receipt');
+});
+Route::controller(CategoryController::class)->group(function () {
+    Route::get('/category/{name}','index')->name("categories.user.index");
+});
+Route::get('/search-suggestions', [HomeController::class, 'suggestions'])->name('search.suggestions');
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

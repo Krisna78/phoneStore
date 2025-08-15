@@ -1,169 +1,208 @@
-import { Head, router } from '@inertiajs/react'
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+import Footer from '@/components/Footer';
+import Header from '@/components/Header';
+import { Button } from '@/components/ui/button';
+import { Head, router, usePage } from '@inertiajs/react';
+import { CheckCircle } from 'lucide-react';
+import { useState } from 'react';
 
 type DetailProductProps = {
-  user: { name: string } | null
-  product: Product
+    user: User | null;
+    product: Product;
+};
+interface User {
+    id: number;
+    name: string;
+    email: string;
 }
 type Product = {
-  id_product: string
-  name: string
-  price: number | string
-  oldPrice?: number | string
-  description: string
-  image: string
-  images?: string[]
-  sold?: number
-  specs?: { label: string; value: string }[]
+    id_product: string;
+    name: string;
+    price: number | string;
+    oldPrice?: number | string;
+    description: string;
+    image: string; // Hanya satu gambar
+    sold?: number;
+    specs?: { label: string; value: string }[];
+};
+interface XenditInvoiceResponse {
+    id: string;
+    external_id: string;
+    amount: number;
+    status: string;
+    invoice_url: string;
+    description: string;
 }
 
 const formatPrice = (price: number | string): string => {
-  const numPrice = typeof price === 'string' ? Number(price) : price
-  if (isNaN(numPrice)) return 'Rp. -'
+    const numPrice = typeof price === 'string' ? Number(price) : price;
+    if (isNaN(numPrice)) return 'Rp. -';
 
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
-    .format(numPrice)
-    .replace('Rp', 'Rp.')
-}
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })
+        .format(numPrice)
+        .replace('Rp', 'Rp.');
+};
 
 export default function DetailProduct({ user, product }: DetailProductProps) {
-  const [cart, setCart] = useState<{ product: Product; quantity: number }[]>([])
+    const [cart, setCart] = useState<{ product: Product; quantity: number }[]>([]);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const cartCount = usePage().props.cartCount as number;
 
-  if (!product) return <div>Loading...</div>
+    if (!product) return <div>Loading...</div>;
 
-  const handleBuyNow = () => {
-    if (!user) {
-      router.visit(`/login?redirect=${encodeURIComponent(window.location.pathname)}`)
-      return
-    }
-    router.post('/checkout', { product_id: product.id_product, quantity: 1 })
-  }
+    const handleBuyNow = () => {
+        if (!user) {
+            router.visit(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+            return;
+        }
 
-  const handleAddToCart = () => {
-    setCart(prevCart => {
-      const existingIndex = prevCart.findIndex(
-        item => item.product.id_product === product.id_product
-      )
+        setIsProcessing(true);
+        const timeout = setTimeout(() => {
+            setIsProcessing(false);
+            toast({
+                title: 'Timeout',
+                description: 'Koneksi ke Xendit terlalu lama. Silakan coba lagi.',
+                variant: 'destructive',
+            });
+        }, 15000);
 
-      if (existingIndex !== -1) {
-        return prevCart
-      } else {
-        return [...prevCart, { product, quantity: 1 }]
-      }
-    })
-    router.post('/cart/add', {
-        product_id: product.id_product,
-        quantity: 1
-    });
-  }
+        router.post(
+            route('invoice.createPay'),
+            {
+                description: product.name,
+                amount: product.price,
+                payer_email: user.email,
+                product_id: product.id_product,
+                quantity: 1,
+                price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
+                user_id: user.id,
+            },
+            {
+                onSuccess: (page) => {
+                    clearTimeout(timeout);
+                    setIsProcessing(false);
+                    const result = (page.props as unknown as { result: XenditInvoiceResponse }).result;
+                    if (result?.invoice_url) {
+                        window.location.href = result.invoice_url;
+                    } else {
+                        toast({
+                            title: 'Error',
+                            description: 'Gagal membuat invoice. Silakan coba lagi.',
+                            variant: 'destructive',
+                        });
+                    }
+                },
+                onError: () => {
+                    clearTimeout(timeout);
+                    setIsProcessing(false);
+                    toast({
+                        title: 'Error',
+                        description: 'Terjadi kesalahan saat membuat invoice.',
+                        variant: 'destructive',
+                    });
+                },
+            },
+        );
+    };
 
-  return (
-    <div className="bg-white min-h-screen">
-      <Head title={product.name} />
-      <Header user={user} />
+    const handleAddToCart = () => {
+        setCart((prevCart) => {
+            const existingIndex = prevCart.findIndex((item) => item.product.id_product === product.id_product);
+            if (existingIndex !== -1) return prevCart;
+            return [...prevCart, { product, quantity: 1 }];
+        });
+        router.post('/cart/add', {
+            product_id: product.id_product,
+            quantity: 1,
+        });
+    };
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        {/* Breadcrumb */}
-        <nav className="text-sm text-gray-500 mb-4">
-          <span className="hover:text-blue-600 cursor-pointer">Home</span> &gt;
-          <span className="hover:text-blue-600 cursor-pointer"> Smartphone</span> &gt;
-          <span className="text-gray-700"> {product.name}</span>
-        </nav>
+    return (
+        <div className="min-h-screen bg-white">
+            <Head title={product.name} />
+            <Header user={user} cartItemCount={cartCount} />
 
-        {/* Product Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Left: Image */}
-          <div>
-            <img src={product.image} alt={product.name} className="w-full rounded-lg border" />
-            {product.images && product.images.length > 0 && (
-              <div className="flex items-center mt-4 gap-2">
-                <button className="p-2 rounded-full border">
-                  <ChevronLeft />
-                </button>
-                {product.images.map((img, idx) => (
-                  <img
-                    key={idx}
-                    src={img}
-                    alt={`Thumb ${idx}`}
-                    className="w-16 h-16 object-cover rounded-lg border cursor-pointer"
-                  />
-                ))}
-                <button className="p-2 rounded-full border">
-                  <ChevronRight />
-                </button>
-              </div>
-            )}
-          </div>
+            <main className="mx-auto max-w-7xl px-4 py-6">
+                {/* Breadcrumb */}
+                <nav className="mb-4 text-sm text-gray-500">
+                    <span className="cursor-pointer hover:text-blue-600">Home</span> &gt;
+                    <span className="cursor-pointer hover:text-blue-600"> Smartphone</span> &gt;
+                    <span className="text-gray-700"> {product.name}</span>
+                </nav>
 
-          {/* Right: Info */}
-          <div>
-            <h1 className="text-2xl font-semibold">{product.name}</h1>
-            <p className="text-sm text-gray-500">{product.sold ?? 0} Terjual</p>
+                {/* Product Section */}
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                    {/* Left: Image */}
+                    <div>
+                        <img
+                            src={product.image.startsWith('http') ? product.image : `/storage/${product.image}`}
+                            alt={product.name}
+                            className="w-full max-w-md max-h-[500px] rounded-lg border object-cover"
+                        />
+                    </div>
 
-            <div className="mt-3">
-              <p className="text-3xl font-bold text-blue-600">{formatPrice(product.price)}</p>
-              {product.oldPrice && (
-                <p className="text-gray-400 line-through text-lg">
-                  {formatPrice(product.oldPrice)}
-                </p>
-              )}
-            </div>
+                    {/* Right: Info */}
+                    <div>
+                        <h1 className="text-2xl font-semibold">{product.name}</h1>
+                        <p className="text-sm text-gray-500">{product.sold ?? 0} Terjual</p>
 
-            <div className="flex gap-4 mt-6">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700" onClick={handleBuyNow}>
-                Beli Sekarang
-              </Button>
-              <Button size="lg" variant="outline" onClick={handleAddToCart}>
-                Tambah Keranjang
-              </Button>
-            </div>
+                        <div className="mt-3">
+                            <p className="text-3xl font-bold text-blue-600">{formatPrice(product.price)}</p>
+                            {product.oldPrice && (
+                                <p className="text-lg text-gray-400 line-through">{formatPrice(product.oldPrice)}</p>
+                            )}
+                        </div>
 
-            {/* Garansi */}
-            <div className="mt-6 space-y-2">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <CheckCircle className="text-green-500 w-5 h-5" />
-                Layanan Resmi dapat dilakukan di seluruh Apple Authorized Service Center di Indonesia
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <CheckCircle className="text-green-500 w-5 h-5" />
-                Garansi 1 Tahun dari Apple Store / Digimap
-              </div>
-            </div>
-          </div>
-        </div>
+                        <div className="mt-6 flex gap-4">
+                            <Button size="lg" className="bg-blue-600 hover:bg-blue-700" onClick={handleBuyNow}>
+                                Beli Sekarang
+                            </Button>
+                            <Button size="lg" variant="outline" onClick={handleAddToCart}>
+                                Tambah Keranjang
+                            </Button>
+                        </div>
 
-        {/* Deskripsi */}
-        <div className="mt-10">
-          <h2 className="text-xl font-semibold text-blue-600 mb-4">Deskripsi Produk</h2>
-          <p className="text-gray-700 leading-relaxed">{product.description}</p>
-        </div>
-
-        {/* Spesifikasi */}
-        {product.specs && (
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold text-blue-600 mb-4">Spesifikasi Produk</h3>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {product.specs.map((spec, idx) => (
-                <div key={idx} className="flex">
-                  <span className="font-semibold w-32">{spec.label}</span>
-                  <span>{spec.value}</span>
+                        {/* Garansi */}
+                        <div className="mt-6 space-y-2">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <CheckCircle className="h-5 w-5 text-green-500" />
+                                Layanan Resmi dapat dilakukan di seluruh Apple Authorized Service Center di Indonesia
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <CheckCircle className="h-5 w-5 text-green-500" />
+                                Garansi 1 Tahun dari Apple Store / Digimap
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </main>
 
-      <Footer />
-    </div>
-  )
+                {/* Deskripsi */}
+                <div className="mt-10">
+                    <h2 className="mb-4 text-xl font-semibold text-blue-600">Deskripsi Produk</h2>
+                    <p className="leading-relaxed text-gray-700">{product.description}</p>
+                </div>
+
+                {/* Spesifikasi */}
+                {product.specs && (
+                    <div className="mt-8">
+                        <h3 className="mb-4 text-lg font-semibold text-blue-600">Spesifikasi Produk</h3>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            {product.specs.map((spec, idx) => (
+                                <div key={idx} className="flex">
+                                    <span className="w-32 font-semibold">{spec.label}</span>
+                                    <span>{spec.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </main>
+
+            <Footer />
+        </div>
+    );
 }

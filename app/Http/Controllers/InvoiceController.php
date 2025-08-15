@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CartItem;
 use App\Models\Invoice;
+use App\Models\InvoiceDetail;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
@@ -44,9 +46,9 @@ class InvoiceController extends Controller
     }
     public function edit($id)
     {
-       $invoice = Invoice::with(['user', 'invoiceDetail'])->findOrFail($id);
-       $users = User::all();
-       return view('invoice.edit', compact('invoice', 'users'));
+        $invoice = Invoice::with(['user', 'invoiceDetail'])->findOrFail($id);
+        $users = User::all();
+        return view('invoice.edit', compact('invoice', 'users'));
     }
     public function update(Request $request, $id)
     {
@@ -81,51 +83,112 @@ class InvoiceController extends Controller
         $this->invoiceApi = new InvoiceApi();
     }
 
-    public function createInvoice(Request $request)
+    public function createInvoicePay(Request $request)
     {
+        $auth_id = auth()->id();
+        $externalId = (string) Str::uuid();
         $create_invoice_request = new \Xendit\Invoice\CreateInvoiceRequest([
-            'external_id' => (string) Str::uuid(),
+            'external_id' => $externalId,
             'description' => $request->description,
             'amount' => $request->amount,
+            'external_id' => $externalId,
             'payer_email' => $request->payer_email,
+            'success_redirect_url' => route('invoice.receipt', ['external_id' => $externalId]),
+            // 'failure_redirect_url' => route('invoice.failed'),
         ]);
         $result = $this->invoiceApi->createInvoice($create_invoice_request);
-        Invoice::create([
+        $invoice = Invoice::create([
             'invoice_date' => now(),
             'status' => $result->getStatus(),
-            // 'user_id' => $result->getId(),
-            'user_id' => "6e7f47e5-6424-4f98-8530-5e6c660c8f88",
-            'external_id' => $result->getExternalId(),
+            'user_id' => $request->user_id ?? $auth_id,
+            'external_id' => $externalId,
             'checkout_link' => $result->getInvoiceUrl(),
             'payment_date' => now(),
             'payment_amount' => $result->getAmount(),
             'description' => $result->getDescription(),
         ]);
-        return response()->json($result);
+        InvoiceDetail::create([
+            'invoice_id' => $invoice->id_invoice,
+            'product_id' => $request->product_id,
+            'quantity'   => $request->quantity,
+            'line_total' => $request->quantity * $request->price,
+        ]);
+        return Inertia::location($result->getInvoiceUrl());
+    }
+
+    public function createInvoice(Request $request)
+    {
+        $auth_id = auth()->id();
+        $cartItemIds = $request->id_cart_item;
+        $cartItems = CartItem::with('product')
+            ->whereHas('cart', function ($query) use ($auth_id) {
+                $query->where('user_id', $auth_id);
+            })
+            ->whereIn('id_cart_item', $cartItemIds)
+            ->get();
+        if ($cartItems->isEmpty()) {
+            return back()->with('error', 'Tidak ada barang yang dipilih.');
+        }
+        $totalAmount = $cartItems->sum(fn($item) => $item->quantity * $item->product->price);
+        $externalId = (string) Str::uuid();
+        $create_invoice_request = new \Xendit\Invoice\CreateInvoiceRequest([
+            'external_id' => $externalId,
+            'description' => $request->description,
+            'amount' => $totalAmount,
+            'external_id' => $externalId,
+            'payer_email' => $request->payer_email,
+            'success_redirect_url' => route('invoice.receipt', ['external_id' => $externalId]),
+        ]);
+        $result = $this->invoiceApi->createInvoice($create_invoice_request);
+        $invoice = Invoice::create([
+            'invoice_date' => now(),
+            'status' => $result->getStatus(),
+            'user_id' => $request->user_id ?? $auth_id,
+            'external_id' => $externalId,
+            'checkout_link' => $result->getInvoiceUrl(),
+            'payment_date' => now(),
+            'payment_amount' => $result->getAmount(),
+            'description' => $result->getDescription(),
+        ]);
+        foreach ($cartItems as $item) {
+            InvoiceDetail::create([
+                'invoice_id' => $invoice->id_invoice,
+                'product_id' => $item->product_id,
+                'quantity'   => $item->quantity,
+                'line_total' => $item->quantity * $item->product->price,
+            ]);
+        }
+        CartItem::whereIn('id_cart_item', $cartItemIds)->delete();
+        return Inertia::location($result->getInvoiceUrl());
     }
 
     public function webhook(Request $request)
     {
         $result = $this->invoiceApi->getInvoices(null, $request->external_id);
-        // Ambil invoice dari database
-        $payment = Invoice::where('external_id', $request->external_id)->firstOrFail();
-        // Kalau sudah dibayar sebelumnya, tidak perlu proses lagi
+        $payment = Invoice::where('external_id', $request->external_id)->first();
+        if (!$payment) {
+            return response()->json(['message' => 'Invoice not found'], 404);
+        }
         if ($payment->status === 'Sudah dibayar') {
             return response()->json("Payment anda telah diproses sebelumnya");
         }
-        // Mapping status API ke status di database
         $statusMap = [
             'pending' => 'Pending',
             'settled' => 'Sudah dibayar',
             'paid'    => 'Sudah dibayar',
-            'unpaid'  => 'Belum dibayar',
-            'failed'  => 'Belum dibayar'
+            'unpaid'  => 'Menunggu Pembayaran',
+            'failed'  => 'Batal'
         ];
-
         $apiStatus = strtolower($result[0]['status']);
         $payment->status = $statusMap[$apiStatus] ?? $payment->status;
         $payment->save();
-
         return response()->json("Payment anda telah diproses");
+    }
+    public function receipt($external_id)
+    {
+        $invoice = Invoice::where('external_id', $external_id)->firstOrFail();
+        return Inertia::render('invoices/receipt-invoice', [
+            'invoice' => $invoice
+        ]);
     }
 }
