@@ -12,10 +12,27 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with(['merk', 'category'])->get();
-        return Inertia::render("admin/products/product", ["products" => $products]);
+        $query = Product::with(['merk', 'category']);
+        // Kalau ada parameter search dari query string (?search=Handphone)
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('merk', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('category', function ($q3) use ($search) {
+                        $q3->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+        $products = $query->get();
+        return Inertia::render("admin/products/product", [
+            "products" => $products,
+            "filters"  => $request->only('search'),
+        ]);
     }
     public function featuredProducts($limit = 5)
     {

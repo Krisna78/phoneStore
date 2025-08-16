@@ -9,6 +9,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
@@ -60,26 +61,53 @@ class HomeController extends Controller
     }
     public function suggestions(Request $request)
     {
-        $q = $request->get('q', '');
+        try {
+            $q = trim($request->get('q', ''));
 
-        if (trim($q) === '') {
-            return response()->json([]);
-        }
-        $products = Product::with(['brand', 'category'])
-            ->where('name', 'like', "%{$q}%")
-            ->limit(10)
-            ->get()
-            ->map(function ($p) {
-                return [
-                    'id' => $p->id,
-                    'name' => $p->name,
-                    'price' => $p->price,
-                    'image_url' => $p->image_url,
-                    'brand' => $p->brand?->name ?? '-',
-                    'category' => $p->category?->name ?? '-',
+            if ($q === '') {
+                return response()->json([]);
+            }
+
+            $products = Product::with(['merk', 'category'])
+                ->where('name', 'like', "%{$q}%")
+                ->orWhereHas('merk', function ($query) use ($q) {
+                    $query->where('merk_name', 'like', "%{$q}%");
+                })
+                ->orWhereHas('category', function ($query) use ($q) {
+                    $query->where('category_name', 'like', "%{$q}%");
+                })
+                ->orderBy('name')
+                ->limit(10)
+                ->get()
+                ->map(function ($p) {
+                    return [
+                        'id'       => $p->id_product ?? $p->id,
+                        'name'     => $p->name,
+                        'price'    => (int) $p->price,
+                        'brand'    => optional($p->merk)->merk_name ?? '-',
+                        'category' => optional($p->category)->category_name ?? '-',
+                        'redirect' => route('products.show', ['id' => $p->id_product ?? $p->id]),
+                    ];
+                })
+                ->toArray();
+
+            if (empty($products)) {
+                $products[] = [
+                    'id'       => null,
+                    'name'     => "Lihat semua produk \"{$q}\"",
+                    'price'    => null,
+                    'brand'    => null,
+                    'category' => null,
+                    'redirect' => route('products.index',['search' => $q]),
                 ];
-            });
+            }
 
-        return response()->json($products);
+            return response()->json($products);
+        } catch (\Throwable $e) {
+            Log::error('Search suggestions error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['message' => 'Server error'], 500);
+        }
     }
 }

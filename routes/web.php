@@ -44,6 +44,9 @@ Route::controller(InvoiceController::class)->group(function () {
 Route::controller(CategoryController::class)->group(function () {
     Route::get('/category/{name}','index')->name("categories.user.index");
 });
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/search-suggestions', [HomeController::class, 'suggestions'])->name('search.suggestions');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
