@@ -134,30 +134,40 @@ export default function Header({ user, cartItemCount = 0, initialSearch = '' }: 
                 {/* Suggestions Dropdown */}
                 {showSuggestions && suggestions.length > 0 && (
                     <div className="absolute right-0 left-0 z-50 mt-1 max-h-80 overflow-y-auto rounded-md border border-gray-200 bg-white shadow-lg">
-                        {suggestions.map((item) =>
-                            item.id ? (
-                                <Link
-                                    key={item.id}
-                                    href={route('products.show', { id: item.id })}
-                                    className="flex items-center justify-between px-4 py-2 hover:bg-gray-100"
-                                    onClick={() => setShowSuggestions(false)}
-                                >
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-medium text-gray-800">{item.name}</span>
-                                        <span className="text-xs text-gray-500">{item.brand}</span>
-                                    </div>
-                                    <span className="text-xs font-semibold text-blue-600">{item.category}</span>
-                                </Link>
-                            ) : (
-                                <Link
-                                    key={`redirect-${search}`}
-                                    href={item.redirect}
-                                    className="block px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-gray-100"
-                                    onClick={() => setShowSuggestions(false)}
-                                >
-                                    {item.name}
-                                </Link>
-                            ),
+                        {suggestions.map((item) => (
+                            <Link
+                                key={item.id || `redirect-${search}`}
+                                href={item.redirect ? item.redirect : route('products.show', { id: item.id })}
+                                className={
+                                    item.redirect
+                                        ? 'block px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-gray-100'
+                                        : 'flex items-center justify-between px-4 py-2 hover:bg-gray-100'
+                                }
+                                onClick={() => setShowSuggestions(false)}
+                            >
+                                {item.redirect ? (
+                                    item.name
+                                ) : (
+                                    <>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-medium text-gray-800">{item.name}</span>
+                                            <span className="text-xs text-gray-500">{item.brand}</span>
+                                        </div>
+                                        <span className="text-xs font-semibold text-blue-600">{item.category}</span>
+                                    </>
+                                )}
+                            </Link>
+                        ))}
+
+                        {/* Only show "Lihat semua produk" if no similar suggestion exists */}
+                        {search.trim() !== '' && !suggestions.some((item) => item.redirect && item.redirect.includes(`search=${search}`)) && (
+                            <Link
+                                href={route('products.index', { search })}
+                                className="block px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-gray-100"
+                                onClick={() => setShowSuggestions(false)}
+                            >
+                                Lihat semua produk "{search}"
+                            </Link>
                         )}
                     </div>
                 )}

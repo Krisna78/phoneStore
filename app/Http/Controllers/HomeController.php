@@ -9,7 +9,6 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
@@ -86,7 +85,6 @@ class HomeController extends Controller
                         'price'    => (int) $p->price,
                         'brand'    => optional($p->merk)->merk_name ?? '-',
                         'category' => optional($p->category)->category_name ?? '-',
-                        'redirect' => route('products.show', ['id' => $p->id_product ?? $p->id]),
                     ];
                 })
                 ->toArray();
@@ -98,13 +96,13 @@ class HomeController extends Controller
                     'price'    => null,
                     'brand'    => null,
                     'category' => null,
-                    'redirect' => route('products.index',['search' => $q]),
+                    'redirect'      => route('product.index',['search' => $q]),
                 ];
             }
 
             return response()->json($products);
         } catch (\Throwable $e) {
-            Log::error('Search suggestions error: ' . $e->getMessage(), [
+            \Log::error('Search suggestions error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
             return response()->json(['message' => 'Server error'], 500);
