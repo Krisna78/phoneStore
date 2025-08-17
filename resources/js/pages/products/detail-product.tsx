@@ -2,8 +2,9 @@ import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Head, router, usePage } from '@inertiajs/react';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 type DetailProductProps = {
     user: User | null;
@@ -89,20 +90,18 @@ export default function DetailProduct({ user, product }: DetailProductProps) {
                     if (result?.invoice_url) {
                         window.location.href = result.invoice_url;
                     } else {
-                        toast({
-                            title: 'Error',
-                            description: 'Gagal membuat invoice. Silakan coba lagi.',
-                            variant: 'destructive',
+                        toast.error('Koneksi ke Xendit terlalu lama. Silakan coba lagi.', {
+                            description: 'Timeout setelah 15 detik',
+                            duration: 5000,
                         });
                     }
                 },
                 onError: () => {
                     clearTimeout(timeout);
                     setIsProcessing(false);
-                    toast({
-                        title: 'Error',
-                        description: 'Terjadi kesalahan saat membuat invoice.',
-                        variant: 'destructive',
+                    toast.error('Terjadi kesalahan saat membuat invoice.', {
+                        description: 'Error',
+                        duration: 5000,
                     });
                 },
             },
@@ -128,11 +127,17 @@ export default function DetailProduct({ user, product }: DetailProductProps) {
 
             <main className="mx-auto max-w-7xl px-4 py-6">
                 {/* Breadcrumb */}
-                <nav className="mb-4 text-sm text-gray-500">
-                    <span className="cursor-pointer hover:text-blue-600">Home</span> &gt;
-                    <span className="cursor-pointer hover:text-blue-600"> Smartphone</span> &gt;
-                    <span className="text-gray-700"> {product.name}</span>
-                </nav>
+                <div className="mb-4 flex items-center gap-1 text-sm">
+                    <a href="/" className="text-gray-500 hover:text-blue-600">
+                        Home
+                    </a>
+                    <ChevronRight className="h-3 w-3 text-gray-400" />
+                    <a href="/smartphone" className="text-gray-500 hover:text-blue-600">
+                        Smartphone
+                    </a>
+                    <ChevronRight className="h-3 w-3 text-gray-400" />
+                    <span className="text-gray-700">{product.name}</span>
+                </div>
 
                 {/* Product Section */}
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
@@ -141,7 +146,7 @@ export default function DetailProduct({ user, product }: DetailProductProps) {
                         <img
                             src={product.image.startsWith('http') ? product.image : `/storage/${product.image}`}
                             alt={product.name}
-                            className="w-full max-w-md max-h-[500px] rounded-lg border object-cover"
+                            className="max-h-[500px] w-full max-w-md rounded-lg border object-cover"
                         />
                     </div>
 
@@ -152,9 +157,7 @@ export default function DetailProduct({ user, product }: DetailProductProps) {
 
                         <div className="mt-3">
                             <p className="text-3xl font-bold text-blue-600">{formatPrice(product.price)}</p>
-                            {product.oldPrice && (
-                                <p className="text-lg text-gray-400 line-through">{formatPrice(product.oldPrice)}</p>
-                            )}
+                            {product.oldPrice && <p className="text-lg text-gray-400 line-through">{formatPrice(product.oldPrice)}</p>}
                         </div>
 
                         <div className="mt-6 flex gap-4">

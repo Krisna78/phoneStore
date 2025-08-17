@@ -15,7 +15,6 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $query = Product::with(['merk', 'category']);
-        // Kalau ada parameter search dari query string (?search=Handphone)
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -117,6 +116,7 @@ class ProductController extends Controller
             $data['image'] = $path;
         }
         $product->update($data);
+        session()->flash('success', 'Produk berhasil diperbaharui');
         return redirect()->route('product.index')->with('success', "Produk berhasil diperbaharui");
     }
     public function destroy($id)

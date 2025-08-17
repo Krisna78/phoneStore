@@ -4,7 +4,7 @@ export default function Footer() {
   return (
     <footer className="bg-blue-500 text-white ">
       {/* Main Footer Content */}
-      <div className="container mx-auto px-6 py-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8">
+      <div className="container mx-auto px-6 py-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
 
         {/* E-commerce Support */}
         <div>
@@ -13,7 +13,7 @@ export default function Footer() {
           <p>Malang 123</p>
           <p>Pendem</p>
           <p>Jawa Timur</p>
-          <p className="mt-2">Phone: +31 20 123 4567</p>
+          <p className="mt-2">Phone: +62 812 012 3457</p>
           <p>Email: support@phonestore.com</p>
         </div>
 
@@ -37,7 +37,7 @@ export default function Footer() {
         </div>
 
         {/* Help & Support */}
-        <div>
+        {/* <div>
           <h3 className="font-semibold mb-3">Help & Support</h3>
           <ul className="space-y-1">
             <li><a href="#" className="hover:underline">Help center</a></li>
@@ -45,7 +45,7 @@ export default function Footer() {
             <li><a href="#" className="hover:underline">Product returns</a></li>
             <li><a href="#" className="hover:underline">FAQ</a></li>
           </ul>
-        </div>
+        </div> */}
 
         {/* Newsletter */}
         <div>
@@ -77,7 +77,7 @@ export default function Footer() {
       {/* Bottom Footer */}
       <div className="bg-white text-blue-500 text-sm py-4">
         <div className="container mx-auto px-6 flex flex-col sm:flex-row items-center justify-between">
-          <p>© 2024 SmartPhone. All Rights Reserved.</p>
+          <p>© 2024 PhoneStore. All Rights Reserved.</p>
           <div className="flex space-x-4 mt-2 sm:mt-0">
             <a href="#" className="hover:underline">Privacy policy</a>
             <a href="#" className="hover:underline">Cookie settings</a>

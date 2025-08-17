@@ -94,7 +94,6 @@ export default function EditProductForm() {
         window.location.href = response.url
         return
       }
-
       if (!response.ok) {
         alert("Gagal mengupdate produk. Status: " + response.status)
         return

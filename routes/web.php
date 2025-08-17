@@ -27,7 +27,7 @@ Route::middleware(['auth',"role:admin"])->group(function () {
 });
 Route::get('/',[HomeController::class,'homePage'])->name('homepage');
 Route::controller(ProductController::class)->group(function() {
-    Route::get('/detail_product/{id}','detailProduct')->name('products.show');
+    Route::get('/detail_product/{id}','detailProduct')->name('products.show.details');
 });
 Route::controller(CartController::class)->group(function () {
     Route::get('/cart','index')->name('carts.index');

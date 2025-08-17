@@ -2,8 +2,9 @@
 
 import * as React from "react";
 import AppLayout from "@/layouts/app-layout";
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, usePage } from "@inertiajs/react";
 import { type BreadcrumbItem } from "@/types";
+import { toast } from "sonner";
 
 import {
   ColumnDef,
@@ -36,6 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeleteProductAlertDialog } from "@/components/ui/DeleteProductAlertDialog";
+import { useEffect } from "react";
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
@@ -70,6 +72,21 @@ export default function ProductTable({ products:initialProducts }:ProductProps) 
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const { flash } = usePage().props as {
+    flash: { success?: string; error?: string };
+  };
+
+  console.log(flash.success);
+  console.log(flash.error);
+
+  useEffect(() => {
+    if (flash?.success) {
+      toast.success(flash.success);
+    }
+    if (flash?.error) {
+      toast.error(flash.error);
+    }
+  }, [flash?.success, flash?.error]);
 
   const columns: ColumnDef<ProductType>[] = [
   {

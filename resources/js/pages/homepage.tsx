@@ -92,7 +92,7 @@ export default function Homepage({ user, products, categories }: HomepageProps) 
                         return (
                             <Link
                                 key={product.id_product}
-                                href={route('products.show', { id: product.id_product })}
+                                href={route('products.show.details', { id: product.id_product })}
                                 className="group overflow-hidden rounded-lg bg-white shadow-sm transition-all hover:shadow-md"
                             >
                                 <div className="relative aspect-square overflow-hidden">
