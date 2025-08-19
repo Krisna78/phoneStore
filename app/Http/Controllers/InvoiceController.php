@@ -91,7 +91,6 @@ class InvoiceController extends Controller
             'external_id' => $externalId,
             'description' => $request->description,
             'amount' => $request->amount,
-            'external_id' => $externalId,
             'payer_email' => $request->payer_email,
             'success_redirect_url' => route('invoice.receipt', ['external_id' => $externalId]),
             // 'failure_redirect_url' => route('invoice.failed'),
@@ -135,7 +134,6 @@ class InvoiceController extends Controller
             'external_id' => $externalId,
             'description' => $request->description,
             'amount' => $totalAmount,
-            'external_id' => $externalId,
             'payer_email' => $request->payer_email,
             'success_redirect_url' => route('invoice.receipt', ['external_id' => $externalId]),
         ]);
@@ -186,9 +184,31 @@ class InvoiceController extends Controller
     }
     public function receipt($external_id)
     {
-        $invoice = Invoice::where('external_id', $external_id)->firstOrFail();
+        $details = InvoiceDetail::with(['product', 'invoice'])
+            ->whereRelation('invoice', 'external_id', $external_id)
+            ->whereRelation('invoice', 'status', 'Sudah dibayar')
+            ->get();
+        $invoice = optional($details->first())->invoice
+            ?? abort(404, 'Invoice tidak ditemukan');
+        $items = $details->map(fn($detail) => [
+            'id'        => $detail->id_detail_invoice,
+            'name'      => $detail->product->name,
+            'image_url' => $detail->product->image,
+            'quantity'  => $detail->quantity,
+            'price'     => $detail->line_total / max(1, $detail->quantity),
+        ]);
         return Inertia::render('invoices/receipt-invoice', [
-            'invoice' => $invoice
+            'invoice' => array_merge(
+                $invoice->only([
+                    'invoice_date',
+                    'external_id',
+                    'description',
+                    'status',
+                    'payment_amount',
+                    'payment_date',
+                ]),
+                ['items' => $items]
+            )
         ]);
     }
 }

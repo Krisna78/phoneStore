@@ -38,7 +38,6 @@ Route::controller(CartController::class)->group(function () {
 Route::controller(InvoiceController::class)->group(function () {
     Route::post('/invoice/create','createInvoice')->name('invoice.create');
     Route::post('/invoice/create-pay','createInvoicePay')->name('invoice.createPay');
-    Route::post('/invoice/webhook', 'webhook')->name('invoice.webhook');
     Route::get('/invoice/receipt/{external_id}', 'receipt')->name('invoice.receipt');
 });
 Route::controller(CategoryController::class)->group(function () {

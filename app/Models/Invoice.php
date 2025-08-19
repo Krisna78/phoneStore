@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Invoice extends Model
 {
+    protected $table = 'invoices';
     protected $primaryKey = 'id_invoice';
     protected $fillable = [
         'invoice_date',
