@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Invoice;
 use App\Models\InvoiceDetail;
@@ -119,12 +120,11 @@ class InvoiceController extends Controller
     {
         $auth_id = auth()->id();
         $cartItemIds = $request->id_cart_item;
-        $cartItems = CartItem::with('product')
-            ->whereHas('cart', function ($query) use ($auth_id) {
-                $query->where('user_id', $auth_id);
-            })
-            ->whereIn('id_cart_item', $cartItemIds)
-            ->get();
+        $cart = Cart::where('user_id',$auth_id)
+            ->with(['cartItems' => function ($query) use ($cartItemIds) {
+                $query->whereIn('id_cart_item',$cartItemIds)->lockForUpdate();
+            }])->firstOrFail();
+        $cartItems = $cart->cartItems;
         if ($cartItems->isEmpty()) {
             return back()->with('error', 'Tidak ada barang yang dipilih.');
         }

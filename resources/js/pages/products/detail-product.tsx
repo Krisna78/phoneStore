@@ -186,7 +186,7 @@ export default function DetailProduct({ user, product }: DetailProductProps) {
                 {/* Deskripsi */}
                 <div className="mt-10">
                     <h2 className="mb-4 text-xl font-semibold text-blue-600">Deskripsi Produk</h2>
-                    <p className="leading-relaxed text-gray-700">{product.description}</p>
+                    <p className="whitespace-pre-line leading-relaxed text-gray-700">{product.description}</p>
                 </div>
 
                 {/* Spesifikasi */}

@@ -137,7 +137,7 @@ export default function Header({ user, cartItemCount = 0, initialSearch = '' }: 
                         {suggestions.map((item) => (
                             <Link
                                 key={item.id || `redirect-${search}`}
-                                href={item.redirect ? item.redirect : route('products.show', { id: item.id })}
+                                href={item.redirect ? item.redirect : route('products.show.details', { id: item.id })}
                                 className={
                                     item.redirect
                                         ? 'block px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-gray-100'

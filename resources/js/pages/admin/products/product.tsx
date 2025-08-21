@@ -76,9 +76,6 @@ export default function ProductTable({ products:initialProducts }:ProductProps) 
     flash: { success?: string; error?: string };
   };
 
-  console.log(flash.success);
-  console.log(flash.error);
-
   useEffect(() => {
     if (flash?.success) {
       toast.success(flash.success);

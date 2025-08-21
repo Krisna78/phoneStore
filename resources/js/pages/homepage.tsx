@@ -58,7 +58,7 @@ export default function Homepage({ user, products, categories }: HomepageProps) 
                         {categories.map((category) => (
                             <Link
                                 key={category.id_category}
-                                href={route('categories.user.index', { id: category.id_category })}
+                                href={route('products.list.categories', { id: category.id_category })}
                                 className="flex w-32 shrink-0 flex-col items-center gap-2 rounded-lg bg-white p-3 shadow-sm transition-all hover:shadow-md"
                             >
                                 <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-50">

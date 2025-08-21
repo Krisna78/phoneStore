@@ -138,4 +138,15 @@ class ProductController extends Controller
             'category' => $category,
         ]);
     }
+    public function listProduct($categoryId)
+    {
+        $products = Product::with(['merk', 'category'])
+            ->where('category_id', $categoryId)
+            ->get();
+
+        return Inertia::render("products/list-product", [
+            "products"   => $products,
+            "categoryId" => $categoryId,
+        ]);
+    }
 }
