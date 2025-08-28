@@ -12,6 +12,10 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
+    public function show() {
+        $product = Product::with(['merk','category']);
+        return Inertia::render("products/list-product",[ 'products' => $product ]);
+    }
     public function index(Request $request)
     {
         $query = Product::with(['merk', 'category']);
@@ -42,7 +46,7 @@ class ProductController extends Controller
 
         $products->transform(function ($product) {
             if ($product->image) {
-                $product->image = \Illuminate\Support\Facades\Storage::url($product->image);
+                $product->image = Storage::url($product->image);
             }
             return $product;
         });

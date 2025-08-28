@@ -5,7 +5,6 @@ namespace App\Providers;
 use App\Models\CartItem;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
-
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider

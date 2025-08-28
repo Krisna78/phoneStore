@@ -27,7 +27,7 @@ class Product extends Model
     }
     public function invoiceDetail(): HasOne
     {
-        return $this->hasOne(InvoiceDetail::class, 'id_detail_invoice');
+        return $this->hasOne(InvoiceDetail::class,'product_id', 'id_product');
     }
     public function cartItems()
     {

@@ -206,7 +206,7 @@ export default function CartPage({ user, cart }: CartPageProps) {
                       </td>
                       <td className="p-3 flex items-center gap-4">
                         <img
-                          src={item.product.image}
+                          src={item.product.image.startsWith('http') ? item.product.image : `/storage/${item.product.image}`}
                           alt={item.product.name}
                           className="w-16 h-16 rounded-lg object-cover"
                         />

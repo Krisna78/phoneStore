@@ -10,9 +10,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::middleware(['auth',"role:admin"])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard',[HomeController::class,'dashboard'])->name('dashboard');
     Route::controller(ProductController::class)->group(function() {
         Route::get('/product','index')->name('product.index');
         Route::get('/product/add','create')->name('product.create');
@@ -44,8 +42,7 @@ Route::controller(InvoiceController::class)->group(function () {
 Route::controller(CategoryController::class)->group(function () {
     Route::get('/category/{name}','index')->name("categories.user.index");
 });
-Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products', [HomeController::class, 'index'])->name('products.index');
 Route::get('/search-suggestions', [HomeController::class, 'suggestions'])->name('search.suggestions');
 
 require __DIR__.'/settings.php';

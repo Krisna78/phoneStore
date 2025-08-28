@@ -2,61 +2,84 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Cart;
-use App\Models\CartItem;
+use App\Models\User;
 use App\Models\Category;
+use App\Models\Invoice;
+use App\Models\InvoiceDetail;
 use App\Models\Product;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
 {
-    public function featuredProducts($limit = 5)
+    public function index(Request $request)
+    {
+        $search = $request->query('search', '');
+        $products = Product::with(['merk', 'category'])
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('merk', function ($q) use ($search) {
+                        $q->where('merk_name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('category', function ($q) use ($search) {
+                        $q->where('category_name', 'like', "%{$search}%");
+                    });
+            })
+            ->limit(12)
+            ->get();
+
+        return Inertia::render('products/list-product', [
+            'products' => $products,
+            'search'   => $search,
+        ]);
+    }
+    public function featuredProducts($limit = 5, $category = 'Handphone')
     {
         $products = Product::with(['merk', 'category'])
+            ->whereHas('category', function ($query) use ($category) {
+                $query->where('category_name', $category);
+            })
             ->latest()
             ->limit($limit)
             ->get();
 
         $products->transform(function ($product) {
-            if ($product->image) {
-                if (filter_var($product->image, FILTER_VALIDATE_URL)) {
-                    $product->image = $product->image;
-                } else {
-                    $product->image = Storage::url($product->image);
-                }
+            if ($product->image && !filter_var($product->image, FILTER_VALIDATE_URL)) {
+                $product->image = Storage::url($product->image);
             }
             return $product;
         });
+
         return $products;
     }
 
     public function homePage(Request $request)
     {
         $search = $request->query('search', '');
-        $user = auth()->user();
+        $user   = auth()->user();
+
         $categories = Category::select('id_category', 'category_name', 'image')->get();
-        if ($search) {
-            $products = Product::with(['merk', 'category'])
-                ->where('name', 'like', "%{$search}%")
+        $productsByCategory = [];
+        foreach ($categories as $category) {
+            $query = Product::with(['merk', 'category'])
+                ->whereHas('category', fn($q) => $q->where('category_name', $category->category_name))
                 ->latest()
-                ->limit(8)
-                ->get()
-                ->transform(function ($product) {
-                    if ($product->image && !filter_var($product->image, FILTER_VALIDATE_URL)) {
-                        $product->image = \Illuminate\Support\Facades\Storage::url($product->image);
-                    }
-                    return $product;
-                });
-        } else {
-            $products = $this->featuredProducts(8);
+                ->limit(8);
+            if ($search) {
+                $query->where('name', 'like', "%{$search}%");
+            }
+            $productsByCategory[$category->category_name] = $query->get();
         }
-        $products = $this->featuredProducts(8);
         if ($user?->hasRole('admin')) {
             return redirect()->route('dashboard');
         }
-        return Inertia::render('homepage', ['user' => $user, "products" => $products, "categories" => $categories]);
+        return Inertia::render('homepage', [
+            'user'              => $user,
+            'categories'        => $categories,
+            'productsByCategory' => $productsByCategory,
+        ]);
     }
     public function suggestions(Request $request)
     {
@@ -96,7 +119,7 @@ class HomeController extends Controller
                     'price'    => null,
                     'brand'    => null,
                     'category' => null,
-                    'redirect'      => route('product.index',['search' => $q]),
+                    'redirect'      => route('product.index', ['search' => $q]),
                 ];
             }
 
@@ -107,5 +130,123 @@ class HomeController extends Controller
             ]);
             return response()->json(['message' => 'Server error'], 500);
         }
+    }
+    public function dashboard()
+    {
+        $stats = [
+            'products'       => Product::count(),
+            'pending_orders' => Invoice::where('status', 'Pending')->count(),
+            'paid_orders'    => Invoice::where('status', 'Sudah dibayar')->count(),
+            'users'          => User::count(),
+            'revenue'        => Invoice::where('status', 'Sudah dibayar')->sum('payment_amount'),
+        ];
+
+        // Top by category (id_category, name, total_quantity)
+        $categoryPurchases = InvoiceDetail::with('product.category')
+            ->whereHas('invoice', fn($q) => $q->where('status', 'Sudah dibayar'))
+            ->get()
+            ->groupBy(fn($d) => $d->product->category->id_category)
+            ->map(function ($g, $id) {
+                return [
+                    'id_category'    => (int)$id,
+                    'name'           => $g->first()->product->category->category_name ?? null,
+                    'total_quantity' => $g->sum('quantity'),
+                ];
+            })
+            ->sortByDesc('total_quantity')
+            ->values()
+            ->toArray();
+
+        $topProducts = InvoiceDetail::with('product')
+            ->whereHas('invoice', fn($q) => $q->where('status', 'Sudah dibayar'))
+            ->get()
+            ->groupBy('product_id')
+            ->map(function ($g, $id) {
+                return [
+                    'id_product'     => (int)$id,
+                    'name'           => $g->first()->product->name ?? null,
+                    'total_quantity' => $g->sum('quantity'),
+                ];
+            })
+            ->sortByDesc('total_quantity')
+            ->take(10)
+            ->values()
+            ->toArray();
+
+        $startOfYear = Carbon::now()->startOfYear();
+        $endOfYear   = Carbon::now()->endOfYear();
+
+        $categoryMonthly = InvoiceDetail::with('product.category')
+            ->whereHas('invoice', fn($q) => $q->where('status', 'Sudah dibayar'))
+            ->whereBetween('created_at', [$startOfYear, $endOfYear])
+            ->get()
+            ->groupBy(function ($item) {
+                return Carbon::parse($item->created_at)->format('Y-m');
+            })
+            ->map(function ($group, $month) {
+                $cats = [];
+                foreach ($group as $d) {
+                    $id = $d->product->category->id_category;
+                    $cats[$id] = ($cats[$id] ?? 0) + $d->quantity;
+                }
+                return [
+                    'month'      => $month,
+                    'year'       => (int)substr($month, 0, 4),
+                    'categories' => $cats,
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        $popularBrands = InvoiceDetail::with('product.merk')
+            ->whereHas('invoice', fn($q) => $q->where('status', 'Sudah dibayar'))
+            ->get()
+            ->groupBy(fn($d) => $d->product->merk->id_merk ?? null)
+            ->map(function ($g, $id) {
+                return [
+                    'id_brand'       => $id !== null ? (int)$id : null,
+                    'brand_name'     => $g->first()->product->merk->brand_name ?? null,
+                    'total_quantity' => $g->sum('quantity'),
+                ];
+            })
+            ->sortByDesc('total_quantity')
+            ->values()
+            ->toArray();
+
+        $merkMonthly = InvoiceDetail::with('product.merk')
+            ->whereHas('invoice', fn($q) => $q->where('status', 'Sudah dibayar'))
+            ->whereBetween('created_at', [$startOfYear, $endOfYear])
+            ->get()
+            ->groupBy(fn($d) => Carbon::parse($d->created_at)->format('Y-m'))
+            ->map(function ($items, $month) {
+                $acc = [];
+                foreach ($items as $d) {
+                    $merk = $d->product->merk;
+                    $id = $merk->id_merk ?? null;
+                    $name = $merk->merk_name ?? null;
+                    if (!isset($acc[$id])) {
+                        $acc[$id] = [
+                            'id_brand'       => $id,
+                            'brand_name'     => $name,
+                            'total_quantity' => 0,
+                        ];
+                    }
+                    $acc[$id]['total_quantity'] += $d->quantity;
+                }
+                return [
+                    'month' => $month,
+                    'merks' => array_values($acc),
+                ];
+            })
+            ->values()
+            ->toArray();
+        return Inertia::render('dashboard', [
+            'stats'           => $stats,
+            'categories'      => $categoryPurchases,
+            'topProducts'     => $topProducts,
+            'categoryMonthly' => $categoryMonthly,
+            'merkMonthly'     => $merkMonthly,
+            'popularBrands'   => $popularBrands,
+        ]);
     }
 }

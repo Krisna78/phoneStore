@@ -1,18 +1,31 @@
+import ProductCard from '@/components/card-product';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Head, Link, usePage } from '@inertiajs/react';
 
-type CategoryItem = { id_category: number; category_name: string; image: string };
-type ProductItem = { id_product: number; name: string; price: number; originalPrice: number; discount: number; image: string };
+type CategoryItem = {
+    id_category: number;
+    category_name: string;
+    image: string;
+};
+
+type ProductItem = {
+    id_product: number;
+    name: string;
+    price: number;
+    originalPrice: number;
+    discount: number;
+    image: string;
+};
 
 type HomepageProps = {
     user: { name: string } | null;
-    products: ProductItem[];
     categories: CategoryItem[];
+    productsByCategory: Record<string, ProductItem[]>;
 };
 
-export default function Homepage({ user, products, categories }: HomepageProps) {
+export default function Homepage({ user, categories, productsByCategory }: HomepageProps) {
     const cartCount = usePage().props.cartCount as number;
 
     const formatPrice = (price: number | string): string => {
@@ -76,51 +89,33 @@ export default function Homepage({ user, products, categories }: HomepageProps) 
                 </div>
             </section>
 
-            {/* Products Section */}
-            <section className="container mx-auto px-4 pb-12 md:px-6">
-                <div className="mb-6 flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-gray-800 md:text-2xl">
-                        Pilihan terbaik untuk <span className="text-blue-600">Smartphone</span>
-                    </h2>
-                    <Button variant="link" className="text-blue-600 hover:underline" asChild>
-                        <Link href="/products">Lihat Semua</Link>
-                    </Button>
-                </div>
+            {/* Products Per Category */}
+            {Object.entries(productsByCategory).map(([categoryName, products]) => {
+                const category = categories.find((c) => c.category_name === categoryName);
 
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                    {products.map((product) => {
-                        return (
-                            <Link
-                                key={product.id_product}
-                                href={route('products.show.details', { id: product.id_product })}
-                                className="group overflow-hidden rounded-lg bg-white shadow-sm transition-all hover:shadow-md"
-                            >
-                                <div className="relative aspect-square overflow-hidden">
-                                    <img
-                                        src={product.image}
-                                        alt={product.name}
-                                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                        loading="lazy"
-                                    />
-                                    {product.discount > 0 && (
-                                        <span className="absolute top-2 left-2 rounded bg-yellow-400 px-2 py-1 text-xs font-bold">
-                                            {product.discount}% off
-                                        </span>
-                                    )}
-                                </div>
+                return (
+                    <section key={categoryName} className="container mx-auto px-4 pb-12 md:px-6">
+                        <div className="mb-6 flex items-center justify-between">
+                            <h2 className="text-xl font-bold text-gray-800 md:text-2xl">
+                                Pilihan terbaik untuk <span className="text-blue-600">{categoryName}</span>
+                            </h2>
+                            {category && (
+                                <Button variant="link" className="text-blue-600 hover:underline" asChild>
+                                    <Link href={route('products.list.categories', { id: category.id_category })}>Lihat Semua</Link>
+                                </Button>
+                            )}
+                        </div>
 
-                                <div className="p-3">
-                                    <h3 className="line-clamp-2 text-sm leading-tight font-semibold text-gray-800">{product.name}</h3>
-                                    <div className="mt-2">
-                                        <p className="font-bold text-blue-600">{formatPrice(product.price)}</p>
-                                        <p className="hidden text-xs text-gray-400 line-through">{formatPrice(product.originalPrice)}</p>
-                                    </div>
-                                </div>
-                            </Link>
-                        );
-                    })}
-                </div>
-            </section>
+                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                            {products.length > 0 ? (
+                                products.map((product) => <ProductCard key={product.id_product} product={product} formatPrice={formatPrice} />)
+                            ) : (
+                                <p className="col-span-full text-gray-500">Tidak ada produk untuk kategori ini.</p>
+                            )}
+                        </div>
+                    </section>
+                );
+            })}
             <Footer />
         </div>
     );
