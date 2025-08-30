@@ -21,6 +21,8 @@ Route::middleware(['auth',"role:admin"])->group(function () {
     });
     Route::controller(InvoiceController::class)->group(function() {
         Route::get('/invoice','index')->name('invoice.index');
+        // Route::get('/invoice/add','create')->name('invoice.create');
+        // Route::post('/invoice/store','store')->name('invoice.store');
     });
 });
 Route::get('/',[HomeController::class,'homePage'])->name('homepage');

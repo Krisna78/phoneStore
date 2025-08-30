@@ -12,9 +12,10 @@ use Inertia\Inertia;
 
 class ProductController extends Controller
 {
-    public function show() {
-        $product = Product::with(['merk','category']);
-        return Inertia::render("products/list-product",[ 'products' => $product ]);
+    public function show()
+    {
+        $product = Product::with(['merk', 'category']);
+        return Inertia::render("products/list-product", ['products' => $product]);
     }
     public function index(Request $request)
     {
@@ -32,9 +33,13 @@ class ProductController extends Controller
             });
         }
         $products = $query->get();
+        $merk = $products->pluck('merk')->filter()->unique('id_merk')->values();
+        $category = $products->pluck('category')->filter()->unique('id_category')->values();
         return Inertia::render("admin/products/product", [
             "products" => $products,
             "filters"  => $request->only('search'),
+            "merk"     => $merk,
+            "category" => $category,
         ]);
     }
     public function featuredProducts($limit = 5)
@@ -120,16 +125,17 @@ class ProductController extends Controller
             $data['image'] = $path;
         }
         $product->update($data);
-        session()->flash('success', 'Produk berhasil diperbaharui');
         return redirect()->route('product.index')->with('success', "Produk berhasil diperbaharui");
     }
     public function destroy($id)
     {
         $product = Product::findOrFail($id);
         $product->delete();
-        return response()->json([
-            'message' => 'Product berhasil dihapus'
-        ], 200);
+        if ($product->image && Storage::disk('public')->exists($product->image)) {
+            Storage::disk('public')->delete($product->image);
+        }
+        $product->delete();
+        return redirect()->route('product.index')->with('success', 'Product berhasil dihapus');
     }
     public function detailProduct($id)
     {

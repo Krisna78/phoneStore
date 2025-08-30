@@ -17,11 +17,30 @@ use Xendit\Invoice\InvoiceApi;
 class InvoiceController extends Controller
 {
     var $apiInstance;
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = Invoice::with(['user', 'invoiceDetail'])->paginate(10);
-
-        return Inertia::render('admin/invoices/invoice', ['invoices']);
+        $query = Invoice::query();
+        // 1. Pencarian
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('id_invoice', 'like', "%{$search}%")
+                  ->orWhere('external_id', 'like', "%{$search}%")
+                  ->orWhere('status', 'like', "%{$search}%");
+            });
+        }
+        // 2. Sorting
+        if ($request->filled('sort') && in_array($request->sort, ['invoice_date', 'payment_amount', 'status'])) {
+            $order = $request->order === 'desc' ? 'desc' : 'asc';
+            $query->orderBy($request->sort, $order);
+        } else {
+            $query->orderBy('invoice_date', 'desc');
+        }
+        // 3. Pagination
+        $invoices = $query->paginate(10)->withQueryString();
+        return Inertia::render('admin/invoices/invoice', [
+            'invoices' => $invoices,
+        ]);
     }
     public function create()
     {

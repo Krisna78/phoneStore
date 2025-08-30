@@ -1,10 +1,17 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   Select,
   SelectContent,
@@ -12,108 +19,106 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import AppLayout from "@/layouts/app-layout"
-import { Head, router, usePage } from "@inertiajs/react"
-import { type BreadcrumbItem } from "@/types"
+import { Plus } from "lucide-react"
+import { router } from "@inertiajs/react"
 import { toast } from "sonner"
-import * as z from 'zod';
+import * as z from 'zod'
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-
-const breadcrumbs: BreadcrumbItem[] = [
-  { title: "Product", href: "/product" },
-  { title: "Edit Product", href: "#" },
-]
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 
 const schema = z.object({
-  name: z.string().min(2).max(100),
-  price: z.string().min(1).max(100),
-  description: z.string().min(1).max(1000),
-  merk_id: z.string().min(1),
-  category_id: z.string().min(1),
-  image: z.any()
-    .refine((files) => {
-      if (files?.length > 0) return true
-      return !!product?.image
-    }, 'Gambar wajib ditambahkan')
-    .optional(),
+  name: z.string().min(2, "Nama produk minimal 2 karakter").max(100),
+  price: z.string().min(1, "Harga wajib diisi"),
+  description: z.string().min(1, "Deskripsi wajib diisi").max(1000),
+  merk_id: z.string().min(1, "Merk wajib dipilih"),
+  category_id: z.string().min(1, "Kategori wajib dipilih"),
+  image: z.any().refine((files) => files?.length > 0, 'Gambar wajib ditambahkan'),
 })
 
 type FormData = z.infer<typeof schema>
 
-type MerkType = {
-  id_merk: number
-  merk_name: string
-}
-
-type CategoryType = {
-  id_category: number
-  category_name: string
-}
-
-type ProductType = {
-  id_product: number
+type ReturnedProduct = {
+  id_product: number | string
   name: string
-  price: number
   description: string
-  merk_id: number
-  category_id: number
+  price: number
   image: string
+  merk?: { id_merk: number; merk_name: string }
+  category?: { id_category: number; category_name: string }
 }
 
-export default function EditProductForm() {
-  const { merk, category, product } = usePage().props as unknown as {
-    merk: MerkType[]
-    category: CategoryType[]
-    product: ProductType
-  }
+interface AddProductModalProps {
+  merk: { id_merk: number; merk_name: string }[]
+  category: { id_category: number; category_name: string }[]
+  onSuccess?: (newProduct?: ReturnedProduct) => void
+}
+
+export function AddProductModal({ merk, category, onSuccess }: AddProductModalProps) {
+  const [open, setOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: product.name,
-      price: product.price.toString(),
-      description: product.description,
-      merk_id: product.merk_id.toString(),
-      category_id: product.category_id.toString(),
+      name: "",
+      price: "",
+      description: "",
+      merk_id: "",
+      category_id: "",
+      image: undefined,
     },
   })
 
-  function onSubmit(data: FormData) {
+  const onSubmit = async (data: FormData) => {
+    setIsLoading(true)
+
     const formData = new FormData()
     formData.append("name", data.name)
     formData.append("price", data.price)
     formData.append("description", data.description)
     formData.append("merk_id", data.merk_id)
     formData.append("category_id", data.category_id)
-    formData.append("_method", "POST")
 
     if (data.image && data.image.length > 0) {
       formData.append("image", data.image[0])
     }
-
-    router.post(`/product/${product.id_product}/update`, formData, {
-      onSuccess: () => {
-        toast.success("Produk berhasil diupdate!")
-      },
-      onError: () => {
-        toast.error("Gagal mengupdate produk.")
-      },
+    router.post('/product', formData, {
+        onSuccess: () => {
+            toast.success("Produk berhasil ditambahkan!")
+            form.reset()
+            setOpen(false)
+            if (onSuccess) onSuccess()
+        },
+        onError: (errors) => {
+            console.error('Error adding product:', errors)
+            toast.error("Gagal menambahkan produk")
+        },
     })
   }
 
   return (
-    <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Edit Product" />
-      <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border p-6">
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col p-2 md:p-5 w-full mx-auto rounded-md max-w-3xl gap-4 border"
-            encType="multipart/form-data"
-          >
-            <h2 className="text-2xl font-bold">Edit Produk</h2>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2 bg-blue-600 text-white hover:bg-blue-700">
+          <Plus className="h-4 w-4"/>
+          Tambah Produk
+        </Button>
+      </DialogTrigger>
 
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Tambah Produk Baru</DialogTitle>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
             {/* Nama Produk */}
             <FormField
               control={form.control}
@@ -122,7 +127,7 @@ export default function EditProductForm() {
                 <FormItem>
                   <FormLabel>Nama Produk</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input placeholder="Masukkan nama produk" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -137,7 +142,11 @@ export default function EditProductForm() {
                 <FormItem>
                   <FormLabel>Harga</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="Masukkan harga"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -152,7 +161,10 @@ export default function EditProductForm() {
                 <FormItem>
                   <FormLabel>Deskripsi</FormLabel>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Textarea
+                      placeholder="Masukkan deskripsi produk"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -215,7 +227,7 @@ export default function EditProductForm() {
             <FormField
               control={form.control}
               name="image"
-              render={({ field: { value, onChange, ...field } }) => (
+              render={({ field: { onChange} }) => (
                 <FormItem>
                   <FormLabel>Gambar Produk</FormLabel>
                   <FormControl>
@@ -223,33 +235,28 @@ export default function EditProductForm() {
                       type="file"
                       accept="image/*"
                       onChange={(e) => onChange(e.target.files)}
-                      {...field}
                     />
                   </FormControl>
-                  {product.image && (
-                    <img
-                      src={
-                        product.image.startsWith("http")
-                          ? product.image
-                          : `/storage/${product.image}`
-                      }
-                      alt={product.name}
-                      className="mt-2 w-20 h-20 object-cover rounded"
-                    />
-                  )}
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="flex justify-end">
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
+                Batal
+              </Button>
+              <Button type="submit" disabled={isLoading} className="bg-blue-600 text-white hover:bg-blue-700">
+                {isLoading ? "Menambahkan..." : "Tambah Produk"}
               </Button>
             </div>
           </form>
         </Form>
-      </div>
-    </AppLayout>
+      </DialogContent>
+    </Dialog>
   )
 }

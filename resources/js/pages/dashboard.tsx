@@ -52,7 +52,7 @@ const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 
 export default function Dashboard() {
     const { stats, categories, topProducts, categoryMonthly, merkMonthly } = usePage<DashboardProps>().props;
     const now = new Date();
-    const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1); // 1-12
+    const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
     const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
     // Data kategori bulanan
