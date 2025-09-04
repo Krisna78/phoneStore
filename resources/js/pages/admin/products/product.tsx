@@ -128,7 +128,12 @@ export default function ProductTable({ products: initialProducts, merk, category
         },
         {
             accessorKey: 'price',
-            header: 'Price',
+            header: ({ column }) => (
+                <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
+                    Price
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            ),
             cell: ({ row }) => <div className="font-medium">Rp {Number(row.getValue('price')).toLocaleString('id-ID')}</div>,
         },
         {

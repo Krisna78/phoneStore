@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('invoices', function (Blueprint $table) {
             $table->bigIncrements('id_invoice')->primary();
             $table->date("invoice_date");
-            $table->enum('status',['Menunggu Pembayaran',"Batal","Pending","Sudah dibayar"]);
+            $table->enum('status',['Menunggu Pembayaran',"Batal","Pending","Sudah dibayar","Expired"]);
             $table->string("checkout_link");
             $table->uuid('external_id')->unique();
             $table->integer('payment_amount');

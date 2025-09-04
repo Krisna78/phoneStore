@@ -6,32 +6,19 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
 
-const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Profile',
-        href: '/settings/profile',
-        icon: null,
-    },
-    {
-        title: 'Password',
-        href: '/settings/password',
-        icon: null,
-    },
-    {
-        title: 'Appearance',
-        href: '/settings/appearance',
-        icon: null,
-    },
-];
+type SettingsLayoutProps = PropsWithChildren<{ isAdmin?: boolean }>;
 
-export default function SettingsLayout({ children }: PropsWithChildren) {
-    // When server-side rendering, we only render the layout on the client...
-    if (typeof window === 'undefined') {
-        return null;
-    }
+export default function SettingsLayout({ children, isAdmin }: SettingsLayoutProps) {
+    if (typeof window === 'undefined') return null;
 
     const currentPath = window.location.pathname;
 
+    const sidebarNavItems: NavItem[] = [
+        { title: 'Profile', href: '/settings/profile', icon: null },
+        { title: 'Password', href: '/settings/password', icon: null },
+        ...(isAdmin ? [{ title: 'Appearance', href: '/settings/appearance', icon: null }] : []),
+    ];
+    console.log('isAdmin in SettingsLayout:', isAdmin);
     return (
         <div className="px-4 py-6">
             <Heading title="Settings" description="Manage your profile and account settings" />

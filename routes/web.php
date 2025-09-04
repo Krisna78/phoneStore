@@ -1,13 +1,12 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::middleware(['auth',"role:admin"])->group(function () {
     Route::get('/dashboard',[HomeController::class,'dashboard'])->name('dashboard');
@@ -21,8 +20,6 @@ Route::middleware(['auth',"role:admin"])->group(function () {
     });
     Route::controller(InvoiceController::class)->group(function() {
         Route::get('/invoice','index')->name('invoice.index');
-        // Route::get('/invoice/add','create')->name('invoice.create');
-        // Route::post('/invoice/store','store')->name('invoice.store');
     });
 });
 Route::get('/',[HomeController::class,'homePage'])->name('homepage');
@@ -46,6 +43,10 @@ Route::controller(CategoryController::class)->group(function () {
 });
 Route::get('/products', [HomeController::class, 'index'])->name('products.index');
 Route::get('/search-suggestions', [HomeController::class, 'suggestions'])->name('search.suggestions');
+Route::middleware(['auth'])->group(function() {
+    Route::get('/purchase', [InvoiceController::class, 'purchase'])->name('invoice.purchase');
+    Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancelInvoice'])->name('invoice.cancel');
+});
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

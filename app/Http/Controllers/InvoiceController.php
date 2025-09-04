@@ -9,8 +9,10 @@ use App\Models\InvoiceDetail;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 use Xendit\Configuration;
 use Xendit\Invoice\InvoiceApi;
 
@@ -19,33 +21,32 @@ class InvoiceController extends Controller
     var $apiInstance;
     public function index(Request $request)
     {
-        $query = Invoice::query();
-        // 1. Pencarian
-        if ($request->filled('search')) {
+        $query = Invoice::with(['user', 'invoiceDetail.product']);
+
+        if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('id_invoice', 'like', "%{$search}%")
-                  ->orWhere('external_id', 'like', "%{$search}%")
-                  ->orWhere('status', 'like', "%{$search}%");
+                    ->orWhere('external_id', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
-        // 2. Sorting
-        if ($request->filled('sort') && in_array($request->sort, ['invoice_date', 'payment_amount', 'status'])) {
-            $order = $request->order === 'desc' ? 'desc' : 'asc';
-            $query->orderBy($request->sort, $order);
-        } else {
-            $query->orderBy('invoice_date', 'desc');
-        }
-        // 3. Pagination
-        $invoices = $query->paginate(10)->withQueryString();
-        return Inertia::render('admin/invoices/invoice', [
-            'invoices' => $invoices,
+
+        $invoices = $query->latest()->get();
+
+        $status = $invoices->pluck('status')->filter()->unique()->values();
+        $users  = $invoices->pluck('user')->filter()->unique('id_user')->values();
+
+        return inertia("admin/invoices/invoice", [
+            "invoices" => $invoices,
+            "filters"  => $request->only('search'),
+            "status"   => $status,
+            "users"    => $users,
         ]);
-    }
-    public function create()
-    {
-        $users = User::all();
-        return Inertia::render('admin/invoices/add-invoice', ['users']);
     }
     public function store(Request $request)
     {
@@ -105,7 +106,7 @@ class InvoiceController extends Controller
 
     public function createInvoicePay(Request $request)
     {
-        $auth_id = auth()->id();
+        $auth_id = Auth::id();
         $externalId = (string) Str::uuid();
         $create_invoice_request = new \Xendit\Invoice\CreateInvoiceRequest([
             'external_id' => $externalId,
@@ -116,6 +117,7 @@ class InvoiceController extends Controller
             // 'failure_redirect_url' => route('invoice.failed'),
         ]);
         $result = $this->invoiceApi->createInvoice($create_invoice_request);
+        // dd($result->getExpiryDate());
         $invoice = Invoice::create([
             'invoice_date' => now(),
             'status' => $result->getStatus(),
@@ -123,6 +125,7 @@ class InvoiceController extends Controller
             'external_id' => $externalId,
             'checkout_link' => $result->getInvoiceUrl(),
             'payment_date' => now(),
+            'expire_date' => $result->getExpiryDate(),
             'payment_amount' => $result->getAmount(),
             'description' => $result->getDescription(),
         ]);
@@ -137,11 +140,11 @@ class InvoiceController extends Controller
 
     public function createInvoice(Request $request)
     {
-        $auth_id = auth()->id();
+        $auth_id = Auth::id();
         $cartItemIds = $request->id_cart_item;
-        $cart = Cart::where('user_id',$auth_id)
+        $cart = Cart::where('user_id', $auth_id)
             ->with(['cartItems' => function ($query) use ($cartItemIds) {
-                $query->whereIn('id_cart_item',$cartItemIds)->lockForUpdate();
+                $query->whereIn('id_cart_item', $cartItemIds)->lockForUpdate();
             }])->firstOrFail();
         $cartItems = $cart->cartItems;
         if ($cartItems->isEmpty()) {
@@ -164,6 +167,7 @@ class InvoiceController extends Controller
             'external_id' => $externalId,
             'checkout_link' => $result->getInvoiceUrl(),
             'payment_date' => now(),
+            'expire_date' => $result->getExpiryDate(),
             'payment_amount' => $result->getAmount(),
             'description' => $result->getDescription(),
         ]);
@@ -189,12 +193,17 @@ class InvoiceController extends Controller
         if ($payment->status === 'Sudah dibayar') {
             return response()->json("Payment anda telah diproses sebelumnya");
         }
+        if ($payment->status === 'Pending' && $payment->expire_date < now()) {
+            $payment->status = 'Expired';
+            $payment->save();
+        }
         $statusMap = [
             'pending' => 'Pending',
             'settled' => 'Sudah dibayar',
             'paid'    => 'Sudah dibayar',
             'unpaid'  => 'Menunggu Pembayaran',
-            'failed'  => 'Batal'
+            'failed'  => 'Batal',
+            'expired' => 'Expired'
         ];
         $apiStatus = strtolower($result[0]['status']);
         $payment->status = $statusMap[$apiStatus] ?? $payment->status;
@@ -225,9 +234,76 @@ class InvoiceController extends Controller
                     'status',
                     'payment_amount',
                     'payment_date',
+                    'expired_date',
                 ]),
                 ['items' => $items]
             )
+        ]);
+    }
+    public function cancelInvoice($id)
+    {
+        $invoice = Invoice::findOrFail($id);
+        if ($invoice->status !== 'Pending') {
+            return back()->withErrors(['message' => 'Transaksi sudah tidak bisa dibatalkan']);
+        }
+        $invoice->status = 'Batal';
+        $invoice->save();
+
+        return back()->with('success', 'Invoice berhasil dibatalkan.');
+    }
+    public function purchase(Request $request)
+    {
+        // ✅ ambil data transaksi user dengan pagination
+        $transactions = Invoice::with(['invoiceDetail.product', 'user'])
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->paginate(10) // jumlah per halaman
+            ->through(function ($invoice) {
+                return [
+                    'id'      => $invoice->id_invoice,
+                    'date'    => $invoice->invoice_date->format('d M Y'),
+                    'status'  => $invoice->status,
+                    'invoice' => $invoice->external_id ?? $invoice->id_invoice,
+                    'store'   => 'Toko Default',
+                    'expire_date' => $invoice->expire_date,
+                    'products' => $invoice->invoiceDetail->map(function ($detail) {
+                        return [
+                            'name'     => $detail->product->name,
+                            'quantity' => $detail->quantity,
+                            'price'    => $detail->line_total,
+                        ];
+                    })->values(),
+                    'total' => $invoice->payment_amount,
+                ];
+            });
+
+        // ✅ ambil semua transaksi untuk rekap jumlah total
+        $allTransactions = Invoice::with(['invoiceDetail.product', 'user'])
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->get()
+            ->map(function ($invoice) {
+                return [
+                    'id'      => $invoice->id_invoice,
+                    'date'    => $invoice->invoice_date->format('d M Y'),
+                    'status'  => $invoice->status,
+                    'invoice' => $invoice->external_id ?? $invoice->id_invoice,
+                    'store'   => 'Toko Default',
+                    'expire_date' => $invoice->expire_date,
+                    'products' => $invoice->invoiceDetail->map(function ($detail) {
+                        return [
+                            'name'     => $detail->product->name,
+                            'quantity' => $detail->quantity,
+                            'price'    => $detail->line_total,
+                        ];
+                    })->values(),
+                    'total' => $invoice->payment_amount,
+                ];
+            });
+
+        return Inertia::render('invoices/purchase', [
+            'transactions' => $transactions,      // ✅ paginated
+            'allTransactions' => $allTransactions // ✅ semua data (untuk filter/rekap)
         ]);
     }
 }

@@ -19,6 +19,7 @@ import {
 } from '@tanstack/react-table';
 import { ArrowUpDown, ChevronDown } from 'lucide-react';
 
+import InvoiceDetailDialog from '@/components/modal/detail-invoice-modal';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -35,7 +36,7 @@ export type InvoiceType = {
     external_id: string;
     payment_amount: number;
     payment_date: string | null;
-    user_id: string;
+    user?: { id: string; name: string; email: string };
     created_at: string;
     updated_at: string;
 };
@@ -46,12 +47,42 @@ interface InvoiceTableProps {
 }
 
 export default function InvoiceTable({ invoices: initialInvoices, flash }: InvoiceTableProps) {
-    const [invoices, setInvoices] = React.useState(initialInvoices);
+    const mappedInvoices: InvoiceType[] = initialInvoices.map((item: any) => ({
+        id_invoice: item.id_invoice,
+        invoice_date: item.invoice_date,
+        status: item.status,
+        checkout_link: item.checkout_link,
+        external_id: item.external_id,
+        payment_amount: Number(item.line_total || item.payment_amount || 0),
+        payment_date: item.payment_date,
+        user: {
+            id: item.user?.id_user,
+            name: item.user?.name,
+            email: item.user?.email,
+        },
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        items: (item.invoice_detail ?? []).map((detail: any) => ({
+            id_detail: detail.id_detail_invoice,
+            quantity: detail.quantity,
+            line_total: Number(detail.line_total ?? 0),
+            product: detail.product
+                ? {
+                      id_product: detail.product.id_product,
+                      name: detail.product.name,
+                      price: Number(detail.product.price),
+                      brand: detail.product.brand ?? null,
+                      image: detail.product.image ?? null,
+                  }
+                : null,
+        })),
+    }));
+
+    const [invoices] = React.useState<InvoiceType[]>(mappedInvoices);
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = React.useState('');
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
-    console.log('Invoices:', invoices);
 
     React.useEffect(() => {
         if (flash?.success) toast.success(flash.success);
@@ -89,8 +120,34 @@ export default function InvoiceTable({ invoices: initialInvoices, flash }: Invoi
                     Tanggal Invoice <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
+            cell: ({ row }) => {
+                const raw = row.getValue('invoice_date') as string;
+                return raw ? new Date(raw).toLocaleDateString('id-ID') : '-';
+            },
         },
-        { accessorKey: 'status', header: 'Status' },
+        {
+            accessorKey: 'user',
+            header: 'Nama User',
+            cell: ({ row }) => {
+                return row.original.user?.name ?? '-';
+            },
+        },
+        {
+            accessorKey: 'status',
+            header: 'Status',
+            cell: ({ row }) => {
+                const status = row.getValue('status') as string;
+                const colors: Record<string, string> = {
+                    'Menunggu Pembayaran': 'bg-yellow-200 text-white-800',
+                    Batal: 'bg-red-200 text-white-800',
+                    Pending: 'bg-orange-200 text-white-800',
+                    'Sudah dibayar': 'bg-green-200 text-white-800',
+                };
+                return (
+                    <span className={`rounded-full px-2 py-1 text-xs font-semibold ${colors[status] ?? 'bg-gray-200 text-gray-800'}`}>{status}</span>
+                );
+            },
+        },
         {
             accessorKey: 'payment_amount',
             header: 'Jumlah Bayar',
@@ -131,10 +188,13 @@ export default function InvoiceTable({ invoices: initialInvoices, flash }: Invoi
         getFilteredRowModel: getFilteredRowModel(),
         globalFilterFn: (row, columnId, filterValue) => {
             const search = filterValue.toLowerCase();
+            const invoice = row.original;
             return (
-                row.original.status.toLowerCase().includes(search) ||
-                row.original.id_invoice.toString().includes(search) ||
-                (row.original.payment_date?.toLowerCase().includes(search) ?? false)
+                invoice.status.toLowerCase().includes(search) ||
+                invoice.id_invoice.toString().includes(search) ||
+                (invoice.payment_date?.toLowerCase().includes(search) ?? false) ||
+                (invoice.user?.name.toLowerCase().includes(search) ?? false) ||
+                (invoice.user?.email.toLowerCase().includes(search) ?? false)
             );
         },
     });
@@ -149,30 +209,33 @@ export default function InvoiceTable({ invoices: initialInvoices, flash }: Invoi
                     <Input
                         placeholder="Cari invoice..."
                         value={globalFilter ?? ''}
-                        onChange={(event) => setGlobalFilter(event.target.value)}
+                        onChange={(e) => setGlobalFilter(e.target.value)}
                         className="max-w-sm"
                     />
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline">
-                                Columns <ChevronDown />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            {table.getAllColumns()
-                                .filter((column) => column.getCanHide())
-                                .map((column) => (
-                                    <DropdownMenuCheckboxItem
-                                        key={column.id}
-                                        className="capitalize"
-                                        checked={column.getIsVisible()}
-                                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                                    >
-                                        {column.id}
-                                    </DropdownMenuCheckboxItem>
-                                ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="ml-auto">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">
+                                    Columns <ChevronDown />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                {table
+                                    .getAllColumns()
+                                    .filter((column) => column.getCanHide())
+                                    .map((column) => (
+                                        <DropdownMenuCheckboxItem
+                                            key={column.id}
+                                            className="capitalize"
+                                            checked={column.getIsVisible()}
+                                            onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                                        >
+                                            {column.id}
+                                        </DropdownMenuCheckboxItem>
+                                    ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </div>
 
                 <div className="overflow-hidden rounded-md border">
@@ -191,11 +254,17 @@ export default function InvoiceTable({ invoices: initialInvoices, flash }: Invoi
                         <TableBody>
                             {table.getRowModel().rows?.length ? (
                                 table.getRowModel().rows.map((row) => (
-                                    <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                                        ))}
-                                    </TableRow>
+                                    <InvoiceDetailDialog
+                                        key={row.id}
+                                        invoice={row.original}
+                                        trigger={
+                                            <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                                                {row.getVisibleCells().map((cell) => (
+                                                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                                                ))}
+                                            </TableRow>
+                                        }
+                                    />
                                 ))
                             ) : (
                                 <TableRow>

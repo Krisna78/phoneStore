@@ -16,13 +16,21 @@ class Invoice extends Model
         'checkout_link',
         'external_id',
         'payment_date',
+        'expire_date',
         'payment_amount',
         'user_id',
     ];
-    public function user(): BelongsTo {
-        return $this->belongsTo(User::class,'id_user');
+    protected $casts = [
+        'invoice_date' => 'datetime',
+        'created_at'   => 'datetime',
+        'updated_at'   => 'datetime',
+    ];
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id_user');
     }
-    public function invoiceDetail(): HasMany {
-        return $this->hasMany(InvoiceDetail::class,'id_detail_invoice');
+    public function invoiceDetail(): HasMany
+    {
+        return $this->hasMany(InvoiceDetail::class, 'invoice_id', 'id_invoice');
     }
 }
