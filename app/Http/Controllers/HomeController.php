@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Banners;
 use App\Models\User;
 use App\Models\Category;
 use App\Models\Invoice;
@@ -81,6 +82,16 @@ class HomeController extends Controller
             'productsByCategory' => $productsByCategory,
         ]);
     }
+    public function homePage2()
+    {
+        $banners = Banners::all();
+
+        return Inertia::render('homePage2', [
+            'banners' => $banners,
+            'user' => auth()->user(),
+        ]);
+    }
+
     public function suggestions(Request $request)
     {
         try {

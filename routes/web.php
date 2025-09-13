@@ -58,5 +58,7 @@ Route::middleware(['auth'])->group(function() {
     Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancelInvoice'])->name('invoice.cancel');
 });
 
+Route::get('/homepage2',[HomeController::class,'homePage2'])->name('homepage2');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
