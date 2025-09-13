@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, Smartphone, Receipt } from 'lucide-react';
+import { LayoutGrid, Smartphone, Receipt, MonitorSmartphoneIcon, TabletSmartphoneIcon } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -12,6 +12,16 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: '/dashboard',
         icon: LayoutGrid,
+    },
+    {
+        title: "Category",
+        href: "/category",
+        icon: MonitorSmartphoneIcon
+    },
+    {
+        title: "Merk",
+        href: "/merk",
+        icon: TabletSmartphoneIcon
     },
     {
         title: "Product",
@@ -22,7 +32,8 @@ const mainNavItems: NavItem[] = [
         title: "Invoice",
         href: "/invoice",
         icon: Receipt,
-    }
+    },
+
 ];
 
 const footerNavItems: NavItem[] = [

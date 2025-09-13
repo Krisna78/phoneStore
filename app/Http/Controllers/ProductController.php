@@ -58,15 +58,6 @@ class ProductController extends Controller
 
         return Inertia::render("admin/products/product", ["products" => $products]);
     }
-    public function create()
-    {
-        $merk = Merk::select('id_merk', 'merk_name')->get();
-        $category = Category::select('id_category', 'category_name')->get();
-        return Inertia::render('admin/products/add-product', [
-            'merk' => $merk,
-            'category' => $category,
-        ]);
-    }
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -88,17 +79,6 @@ class ProductController extends Controller
         }
         Product::create($data);
         return redirect()->route('product.index')->with('success', "Product berhasil ditambahkan");
-    }
-    public function edit($id)
-    {
-        $product = Product::with('merk', 'category')->findOrFail($id);
-        $merk = Merk::all();
-        $category = Category::all();
-        return Inertia::render("admin/products/edit-product", [
-            "product" => $product,
-            'merk' => $merk,
-            'category' => $category,
-        ]);
     }
     public function update(Request $request, Product $product, $id)
     {
@@ -130,7 +110,6 @@ class ProductController extends Controller
     public function destroy($id)
     {
         $product = Product::findOrFail($id);
-        $product->delete();
         if ($product->image && Storage::disk('public')->exists($product->image)) {
             Storage::disk('public')->delete($product->image);
         }

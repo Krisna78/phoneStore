@@ -10,7 +10,6 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Inertia } from '@inertiajs/inertia';
 import { router } from '@inertiajs/react';
 import { toast } from 'sonner';
 

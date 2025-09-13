@@ -16,9 +16,8 @@ export default function SettingsLayout({ children, isAdmin }: SettingsLayoutProp
     const sidebarNavItems: NavItem[] = [
         { title: 'Profile', href: '/settings/profile', icon: null },
         { title: 'Password', href: '/settings/password', icon: null },
-        ...(isAdmin ? [{ title: 'Appearance', href: '/settings/appearance', icon: null }] : []),
+        // ...(isAdmin ? [{ title: 'Appearance', href: '/settings/appearance', icon: null }] : []),
     ];
-    console.log('isAdmin in SettingsLayout:', isAdmin);
     return (
         <div className="px-4 py-6">
             <Heading title="Settings" description="Manage your profile and account settings" />

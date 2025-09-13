@@ -234,7 +234,7 @@ class InvoiceController extends Controller
                     'status',
                     'payment_amount',
                     'payment_date',
-                    'expired_date',
+                    'expire_date',
                 ]),
                 ['items' => $items]
             )
@@ -251,13 +251,12 @@ class InvoiceController extends Controller
 
         return back()->with('success', 'Invoice berhasil dibatalkan.');
     }
-    public function purchase(Request $request)
+    public function purchase()
     {
-        // ✅ ambil data transaksi user dengan pagination
         $transactions = Invoice::with(['invoiceDetail.product', 'user'])
             ->where('user_id', Auth::id())
             ->latest()
-            ->paginate(10) // jumlah per halaman
+            ->paginate(10)
             ->through(function ($invoice) {
                 return [
                     'id'      => $invoice->id_invoice,
@@ -277,7 +276,6 @@ class InvoiceController extends Controller
                 ];
             });
 
-        // ✅ ambil semua transaksi untuk rekap jumlah total
         $allTransactions = Invoice::with(['invoiceDetail.product', 'user'])
             ->where('user_id', Auth::id())
             ->latest()
@@ -302,8 +300,8 @@ class InvoiceController extends Controller
             });
 
         return Inertia::render('invoices/purchase', [
-            'transactions' => $transactions,      // ✅ paginated
-            'allTransactions' => $allTransactions // ✅ semua data (untuk filter/rekap)
+            'transactions' => $transactions,
+            'allTransactions' => $allTransactions
         ]);
     }
 }

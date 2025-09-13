@@ -18,6 +18,7 @@ type Invoice = {
   status: string
   payment_amount: number
   payment_date: string | null
+  expire_date: string | null
   items: InvoiceItem[]
 }
 

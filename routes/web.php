@@ -5,21 +5,31 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\MerkController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth',"role:admin"])->group(function () {
     Route::get('/dashboard',[HomeController::class,'dashboard'])->name('dashboard');
     Route::controller(ProductController::class)->group(function() {
         Route::get('/product','index')->name('product.index');
-        Route::get('/product/add','create')->name('product.create');
         Route::post('/product/store','store')->name('product.store');
-        Route::get('/product/{id}/edit','edit')->name('product.edit');
         Route::post('/product/{id}/update','update')->name('product.update');
         Route::delete('/product/{id}','destroy')->name('product.destroy');
     });
     Route::controller(InvoiceController::class)->group(function() {
         Route::get('/invoice','index')->name('invoice.index');
+    });
+    Route::controller(CategoryController::class)->group(function(){
+        Route::get('/category','index')->name('category.index');
+        Route::post('/category/store','store')->name('category.store');
+        Route::post("/category/{id}/update","update")->name('category.update');
+        Route::delete("/category/{id}","destroy")->name('category.destroy');
+    });
+    Route::controller(MerkController::class)->group(function(){
+        Route::get('/merk','index')->name('merk.index');
+        Route::post('/merk/store','store')->name('merk.store');
+        Route::post("/merk/{id}/update","update")->name('merk.update');
+        Route::delete("/merk/{id}","destroy")->name('merk.destroy');
     });
 });
 Route::get('/',[HomeController::class,'homePage'])->name('homepage');

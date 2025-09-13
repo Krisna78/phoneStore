@@ -9,6 +9,7 @@ import * as React from 'react';
 import { useState } from 'react';
 
 interface InvoiceDetailDialogProps {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     invoice: any;
     trigger?: React.ReactNode;
 }
@@ -62,7 +63,9 @@ export default function InvoiceDetailDialog({ invoice, trigger }: InvoiceDetailD
     const getInvoiceItems = (): InvoiceItem[] => {
         if (!invoice) return [];
         const rawItems = invoice.items ?? invoice.details ?? invoice.products ?? invoice.item_detail ?? [];
+        console.log(invoice)
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return rawItems.map((item: any) => ({
             ...item,
             quantity: Number(item.quantity) || 0,
@@ -221,13 +224,13 @@ export default function InvoiceDetailDialog({ invoice, trigger }: InvoiceDetailD
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-600">Terakhir Diupdate</p>
+                                    <p className="text-sm text-gray-600">Batas Pembayaran</p>
                                     <p className="font-medium">
-                                        {invoice?.updated_at ? (
+                                        {invoice?.expire_date ? (
                                             <>
-                                                {formatDate(invoice.updated_at)}
+                                                {formatDate(invoice.expire_date)}
                                                 <br />
-                                                <span className="text-sm text-gray-500">{formatTime(invoice.updated_at)}</span>
+                                                <span className="text-sm text-gray-500">{formatTime(invoice.expire_date)}</span>
                                             </>
                                         ) : (
                                             '-'

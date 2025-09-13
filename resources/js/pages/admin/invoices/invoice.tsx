@@ -19,7 +19,7 @@ import {
 } from '@tanstack/react-table';
 import { ArrowUpDown, ChevronDown } from 'lucide-react';
 
-import InvoiceDetailDialog from '@/components/modal/detail-invoice-modal';
+import InvoiceDetailDialog from '@/components/modal/invoices/detail-invoice-modal';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -36,6 +36,7 @@ export type InvoiceType = {
     external_id: string;
     payment_amount: number;
     payment_date: string | null;
+    expire_date: string | null;
     user?: { id: string; name: string; email: string };
     created_at: string;
     updated_at: string;
@@ -55,6 +56,7 @@ export default function InvoiceTable({ invoices: initialInvoices, flash }: Invoi
         external_id: item.external_id,
         payment_amount: Number(item.line_total || item.payment_amount || 0),
         payment_date: item.payment_date,
+        expire_date: item.expire_date,
         user: {
             id: item.user?.id_user,
             name: item.user?.name,
@@ -138,10 +140,10 @@ export default function InvoiceTable({ invoices: initialInvoices, flash }: Invoi
             cell: ({ row }) => {
                 const status = row.getValue('status') as string;
                 const colors: Record<string, string> = {
-                    'Menunggu Pembayaran': 'bg-yellow-200 text-white-800',
-                    Batal: 'bg-red-200 text-white-800',
-                    Pending: 'bg-orange-200 text-white-800',
-                    'Sudah dibayar': 'bg-green-200 text-white-800',
+                    'Menunggu Pembayaran': 'bg-yellow-200 text-white-800 dark:bg-yellow-800',
+                    Batal: 'bg-red-200 text-white-800 dark:bg-red-800',
+                    Pending: 'bg-orange-200 text-white-800 dark:bg-orange-800',
+                    'Sudah dibayar': 'bg-green-200 text-white-800 dark:bg-green-800',
                 };
                 return (
                     <span className={`rounded-full px-2 py-1 text-xs font-semibold ${colors[status] ?? 'bg-gray-200 text-gray-800'}`}>{status}</span>

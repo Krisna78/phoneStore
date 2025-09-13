@@ -2,7 +2,7 @@
 
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import * as React from 'react';
 import { toast } from 'sonner';
 
@@ -19,70 +19,51 @@ import {
 } from '@tanstack/react-table';
 import { ArrowUpDown, ChevronDown } from 'lucide-react';
 
-import { AddProductModal } from '@/components/modal/products/add-product-modal';
-import EditProductModal from '@/components/modal/products/edit-product-modal';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DeleteProductAlertDialog } from '@/components/ui/DeleteProductAlertDialog';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useEffect } from 'react';
 
+import AddCategoryModal from '@/components/modal/category/add-category-modal';
+import { DeleteCategoryModal } from '@/components/modal/category/delete-category-modal';
+import EditCategoryModal from '@/components/modal/category/edit-category-modal';
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Product',
-        href: '/product',
+        title: 'Category',
+        href: '/category',
     },
 ];
 
-type Merk = {
-    id_merk: number;
-    merk_name: string;
-};
-
-type Category = {
+export type CategoryType = {
     id_category: number;
     category_name: string;
-};
-
-export type ProductType = {
-    id_product: string;
-    name: string;
-    description: string;
-    price: number;
     image: string;
-    merk?: Merk;
-    category?: Category;
 };
 
-interface ProductTableProps {
-    products: ProductType[];
-    merk: { id_merk: number; merk_name: string }[];
-    category: { id_category: number; category_name: string }[];
+interface CategoryTableProps {
+    categories: CategoryType[];
     flash?: {
         success?: string;
         error?: string;
     };
 }
 
-export default function ProductTable({ products: initialProducts, merk, category, flash }: ProductTableProps) {
-    const [products, setProducts] = React.useState(initialProducts);
+export default function CategoryTable({ categories: initialCategories, flash }: CategoryTableProps) {
+    const [, setCategories] = React.useState<CategoryType[]>(initialCategories ?? []);
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = React.useState('');
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
 
     useEffect(() => {
-        if (flash?.success) {
-            toast.success(flash.success);
-        }
-        if (flash?.error) {
-            toast.error(flash.error);
-        }
+        if (flash?.success) toast.success(flash.success);
+        if (flash?.error) toast.error(flash.error);
     }, [flash?.success, flash?.error]);
 
-    const columns: ColumnDef<ProductType>[] = [
+    const columns: ColumnDef<CategoryType>[] = [
         {
             id: 'select',
             header: ({ table }) => (
@@ -102,76 +83,36 @@ export default function ProductTable({ products: initialProducts, merk, category
             accessorKey: 'image',
             header: 'Image',
             cell: ({ row }) => {
-                const image = row.original.image;
-                return (
-                    <img
-                        src={image.startsWith('http') ? image : `/storage/${image}`}
-                        alt={row.original.name}
-                        className="h-16 w-16 rounded-md object-cover"
-                    />
-                );
+                const category = row.original;
+                const imageUrl = category?.image
+                    ? category.image.startsWith('http')
+                        ? category.image
+                        : `/storage/${category.image}`
+                    : '/placeholder.png';
+                return <img src={imageUrl} alt={category.category_name} className="h-16 w-16 rounded-md object-cover" />;
             },
         },
         {
-            accessorKey: 'name',
+            accessorKey: 'category_name',
             header: ({ column }) => (
                 <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Name
+                    Category
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
-        },
-        {
-            accessorKey: 'description',
-            header: 'Description',
-            cell: ({ row }) => <div className="line-clamp-2 max-w-2xs overflow-ellipsis">{row.getValue('description')}</div>,
-        },
-        {
-            accessorKey: 'price',
-            header: ({ column }) => (
-                <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}>
-                    Price
-                    <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-            ),
-            cell: ({ row }) => <div className="font-medium">Rp {Number(row.getValue('price')).toLocaleString('id-ID')}</div>,
-        },
-        {
-            id: 'merk_id',
-            header: 'Merk',
-            cell: ({ row }) => row.original.merk?.merk_name ?? '-',
-        },
-        {
-            id: 'category_id',
-            header: 'Category',
-            cell: ({ row }) => row.original.category?.category_name ?? '-',
         },
         {
             id: 'actions',
             header: 'Action',
             cell: ({ row }) => (
                 <div className="flex items-center gap-2">
-                    <EditProductModal
-                        product={row.original}
-                        merk={merk}
-                        category={category}
-                        onSuccess={(updated) => {
-                            setProducts((prev) => prev.map((p) => (String(p.id_product) === String(updated.id_product) ? updated : p)));
-                            toast.success('Produk berhasil diperbarui!');
-                        }}
-                    />
-                    <DeleteProductAlertDialog
-                        id={row.original.id_product}
-                        onDelete={(id) => {
-                            router.delete(`/product/${id}`, {
-                                onSuccess: () => {
-                                    setProducts((prev) => prev.filter((p) => String(p.id_product) !== String(id)));
-                                },
-                                onError: (err) => {
-                                    console.error('Delete error', err);
-                                    toast.error('Gagal menghapus produk');
-                                },
-                            });
+                    <EditCategoryModal category={row.original} />
+                    <DeleteCategoryModal
+                        id={row.original.id_category}
+                        name={row.original.category_name}
+                        onSuccess={(deletedId) => {
+                            setCategories((prev) => prev.filter((c) => c.id_category !== deletedId));
+                            // toast.success('Kategori berhasil dihapus!');
                         }}
                     />
                 </div>
@@ -180,7 +121,7 @@ export default function ProductTable({ products: initialProducts, merk, category
     ];
 
     const table = useReactTable({
-        data: products,
+        data: initialCategories,
         columns,
         state: {
             sorting,
@@ -196,29 +137,30 @@ export default function ProductTable({ products: initialProducts, merk, category
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
-        globalFilterFn: (row, columnId, filterValue) => {
+        globalFilterFn: (row, _columnId, filterValue) => {
             const search = filterValue.toLowerCase();
-            const name = row.original.name?.toLowerCase() ?? '';
-            const category = row.original.category?.category_name?.toLowerCase() ?? '';
-            const merk = row.original.merk?.merk_name?.toLowerCase() ?? '';
-            return name.includes(search) || category.includes(search) || merk.includes(search);
+            return row.original.category_name.toLowerCase().includes(search);
         },
     });
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Product" />
+            <Head title="Category" />
             <div className="p-4">
-                <h1 className="mb-2 text-2xl font-bold">Daftar Produk</h1>
+                <h1 className="mb-2 text-2xl font-bold">Daftar Kategori</h1>
                 <div className="flex items-center gap-2 py-4">
                     <Input
-                        placeholder="Cari produk, kategori, atau merk..."
+                        placeholder="Cari kategori..."
                         value={globalFilter ?? ''}
                         onChange={(event) => setGlobalFilter(event.target.value)}
                         className="max-w-sm"
                     />
                     <div className="ml-auto flex gap-2">
-                        <AddProductModal merk={merk} category={category} />
+                        <AddCategoryModal
+                            onSuccess={(newCategory) => {
+                                setCategories((prev) => [...prev, newCategory]);
+                            }}
+                        />
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline">
@@ -229,18 +171,16 @@ export default function ProductTable({ products: initialProducts, merk, category
                                 {table
                                     .getAllColumns()
                                     .filter((column) => column.getCanHide())
-                                    .map((column) => {
-                                        return (
-                                            <DropdownMenuCheckboxItem
-                                                key={column.id}
-                                                className="capitalize"
-                                                checked={column.getIsVisible()}
-                                                onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                                            >
-                                                {column.id}
-                                            </DropdownMenuCheckboxItem>
-                                        );
-                                    })}
+                                    .map((column) => (
+                                        <DropdownMenuCheckboxItem
+                                            key={column.id}
+                                            className="capitalize"
+                                            checked={column.getIsVisible()}
+                                            onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                                        >
+                                            {column.id}
+                                        </DropdownMenuCheckboxItem>
+                                    ))}
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -250,13 +190,11 @@ export default function ProductTable({ products: initialProducts, merk, category
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <TableRow key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => {
-                                        return (
-                                            <TableHead key={header.id}>
-                                                {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                                            </TableHead>
-                                        );
-                                    })}
+                                    {headerGroup.headers.map((header) => (
+                                        <TableHead key={header.id}>
+                                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                                        </TableHead>
+                                    ))}
                                 </TableRow>
                             ))}
                         </TableHeader>

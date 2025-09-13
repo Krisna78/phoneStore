@@ -85,7 +85,6 @@ export default function EditProductModal({ product, merk, category, onSuccess, t
                 setOpen(false);
                 setIsLoading(false);
                 try {
-                    // Ambil produk yang diupdate dari props Inertia (controller harus mengirim products)
                     const updatedProduct = (page.props as any)?.products?.find(
                         (p: any) => String(p.id_product) === String(product.id_product),
                     );
