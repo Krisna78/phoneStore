@@ -63,8 +63,6 @@ export default function InvoiceDetailDialog({ invoice, trigger }: InvoiceDetailD
     const getInvoiceItems = (): InvoiceItem[] => {
         if (!invoice) return [];
         const rawItems = invoice.items ?? invoice.details ?? invoice.products ?? invoice.item_detail ?? [];
-        console.log(invoice)
-
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return rawItems.map((item: any) => ({
             ...item,

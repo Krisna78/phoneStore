@@ -50,7 +50,6 @@ export default function AddMerkModal({ onSuccess }: AddMerkModalProps) {
   function onSubmit(data: FormData) {
     router.post("/merk/store", data, {
       onSuccess: (page) => {
-        toast.success("Merk berhasil ditambahkan!");
         form.reset();
         setOpen(false);
         if (onSuccess) onSuccess(page.props.merk);

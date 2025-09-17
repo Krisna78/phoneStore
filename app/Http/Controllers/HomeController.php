@@ -6,10 +6,12 @@ use App\Models\User;
 use App\Models\Category;
 use App\Models\Invoice;
 use App\Models\InvoiceDetail;
+use App\Models\Merk;
 use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
@@ -27,11 +29,13 @@ class HomeController extends Controller
                         $q->where('category_name', 'like', "%{$search}%");
                     });
             })
-            ->limit(12)
             ->get();
+
+        $brand = Merk::select("id_merk","merk_name")->get();
 
         return Inertia::render('products/list-product', [
             'products' => $products,
+            'brands'   => $brand,
             'search'   => $search,
         ]);
     }
@@ -125,7 +129,7 @@ class HomeController extends Controller
 
             return response()->json($products);
         } catch (\Throwable $e) {
-            \Log::error('Search suggestions error: ' . $e->getMessage(), [
+            Log::error('Search suggestions error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
             return response()->json(['message' => 'Server error'], 500);

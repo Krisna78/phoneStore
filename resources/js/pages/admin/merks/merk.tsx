@@ -36,7 +36,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useEffect } from 'react';
 
 import AddMerkModal from '@/components/modal/merks/add-modal-merk';
 import EditMerkModal from '@/components/modal/merks/edit-modal-merk';
@@ -62,18 +61,19 @@ interface MerkTableProps {
   };
 }
 
-export default function MerkTable({
-  merks: initialMerks,
-  flash,
-}: MerkTableProps) {
-  const [, setMerks] = React.useState<MerkType[]>(initialMerks ?? []);
+export default function MerkTable({ merks: initialMerks, flash }: MerkTableProps) {
+  const [merks, setMerks] = React.useState<MerkType[]>(initialMerks ?? []);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState('');
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  useEffect(() => {
+  // Sync dari server (Inertia props)
+  React.useEffect(() => {
+    setMerks(initialMerks ?? []);
+  }, [initialMerks]);
+
+  React.useEffect(() => {
     if (flash?.success) toast.success(flash.success);
     if (flash?.error) toast.error(flash.error);
   }, [flash?.success, flash?.error]);
@@ -87,9 +87,7 @@ export default function MerkTable({
             table.getIsAllPageRowsSelected() ||
             (table.getIsSomePageRowsSelected() && 'indeterminate')
           }
-          onCheckedChange={(value) =>
-            table.toggleAllPageRowsSelected(!!value)
-          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
         />
       ),
@@ -108,39 +106,39 @@ export default function MerkTable({
       header: ({ column }) => (
         <Button
           variant="ghost"
-          onClick={() =>
-            column.toggleSorting(column.getIsSorted() === 'asc')
-          }
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Merk
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
+      cell: ({ row }) => row.original?.merk_name ?? '-',
     },
     {
       id: 'actions',
       header: 'Action',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <EditMerkModal
-            merk={row.original}
-          />
-          <DeleteMerkModal
-            id={row.original.id_merk}
-            name={row.original.merk_name}
-            onSuccess={(deletedId) => {
-              setMerks((prev) =>
-                prev.filter((m) => m.id_merk !== deletedId),
-              );
-            }}
-          />
-        </div>
-      ),
+      cell: ({ row }) => {
+        const merk = row.original;
+        if (!merk) return null;
+
+        return (
+          <div className="flex items-center gap-2">
+            <EditMerkModal merk={merk} />
+            <DeleteMerkModal
+              id={merk.id_merk}
+              name={merk.merk_name}
+              onSuccess={(deletedId) => {
+                setMerks((prev) => prev.filter((m) => m.id_merk !== deletedId));
+              }}
+            />
+          </div>
+        );
+      },
     },
   ];
 
   const table = useReactTable({
-    data: initialMerks,
+    data: merks ?? [],
     columns,
     state: {
       sorting,
@@ -158,7 +156,7 @@ export default function MerkTable({
     onRowSelectionChange: setRowSelection,
     globalFilterFn: (row, _columnId, filterValue) => {
       const search = filterValue.toLowerCase();
-      return row.original.merk_name.toLowerCase().includes(search);
+      return (row.original?.merk_name ?? '').toLowerCase().includes(search);
     },
   });
 
@@ -178,7 +176,6 @@ export default function MerkTable({
             <AddMerkModal
               onSuccess={(newMerk) => {
                 setMerks((prev) => [...prev, newMerk]);
-                toast.success('Merk berhasil ditambahkan!');
               }}
             />
             <DropdownMenu>
