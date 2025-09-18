@@ -158,6 +158,27 @@
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
 
+    /* warna baru */
+    --color-secondary1: var(--color-secondary1);
+    --color-secondary2: var(--color-secondary2);
+    --color-secondary3: var(--color-secondary3);
+    --color-secondary4: var(--color-secondary4);
+    --color-third1: var(--color-third1);
+    --color-third2: var(--color-third2);
+    --color-third3: var(--color-third3);
+    --color-third4: var(--color-third4);
+    --color-white: var(--color-white);
+    --color-black: var(--color-black);
+    --color-grey1: var(--color-grey1);
+    --color-grey2: var(--color-grey2);
+    --color-grey3: var(--color-grey3);
+    --color-grey4: var(--color-grey4);
+    --color-grey5: var(--color-grey5);
+    --color-succees: var(--color-succees);
+    --color-danger: var(--color-danger);
+    --color-warning: var(--color-warning);
+    --color-discount: var(--color-discount);
+
     --font-sans: var(--font-sans);
     --font-mono: var(--font-mono);
     --font-serif: var(--font-serif);

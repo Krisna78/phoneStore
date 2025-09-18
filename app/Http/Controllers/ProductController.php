@@ -129,6 +129,8 @@ class ProductController extends Controller
     }
     public function listProduct($categoryId)
     {
+        $category = Category::findOrFail($categoryId);
+
         $products = Product::with(['merk', 'category'])
             ->where('category_id', $categoryId)
             ->get();

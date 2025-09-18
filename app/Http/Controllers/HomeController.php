@@ -63,6 +63,7 @@ class HomeController extends Controller
 
         $categories = Category::select('id_category', 'category_name', 'image')->get();
         $productsByCategory = [];
+        $banners = Banners::all();
         foreach ($categories as $category) {
             $query = Product::with(['merk', 'category'])
                 ->whereHas('category', fn($q) => $q->where('category_name', $category->category_name))
@@ -76,13 +77,14 @@ class HomeController extends Controller
         if ($user?->hasRole('admin')) {
             return redirect()->route('dashboard');
         }
-        return Inertia::render('homepage2', [
+        return Inertia::render('homepage', [
             'user'              => $user,
             'categories'        => $categories,
             'productsByCategory' => $productsByCategory,
+            'banners' => $banners,
         ]);
     }
-    public function homePage2()
+    public function homePage2(Request $request)
     {
         $search = $request->query('search', '');
         $user   = auth()->user();
@@ -104,11 +106,11 @@ class HomeController extends Controller
         if ($user?->hasRole('admin')) {
             return redirect()->route('dashboard');
         }
-        return Inertia::render('homepage2', [
-            'user'              => $user,
-            'categories'        => $categories,
+        return Inertia::render('homePage2', [
+            'user'               => $user,
+            'categories'         => $categories,
             'productsByCategory' => $productsByCategory,
-            'banners' => $banners,
+            'banners'            => $banners,
         ]);
     }
 

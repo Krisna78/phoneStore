@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function Banner() {
     const banners = [
@@ -81,12 +81,12 @@ export default function Banner() {
                     </button>
                 )}
 
-                <div className="absolute -bottom-5 md:-bottom-5 lg:-bottom-7 left-1/2 flex -translate-x-1/2 gap-2 bg-accent/40 rounded-lg p-1 lg:p-1.5 md:p-1">
+                <div className="absolute -bottom-5 md:-bottom-5 lg:-bottom-7 left-1/2 flex -translate-x-1/2 gap-2 bg-grey5 rounded-full p-1 lg:p-1.5 md:p-1">
                     {banners.map((_, i) => (
                         <div
                             key={i}
                             className={`h-1 w-1 md:h-1.5 md:w-1.5 lg:h-2 lg:w-2 rounded-full transition ${
-                                i === index ? 'bg-white' : 'bg-grey2'
+                                i === index ? 'bg-primary' : 'bg-grey2'
                             }`}
                         ></div>
                     ))}
