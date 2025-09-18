@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Category;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class CategoryController extends Controller
@@ -39,10 +40,10 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'category_name' => ['required', 'string', "unique:categories,category_name," . $id],
+            'category_name' => ['required', 'string', Rule::unique("categories","category_name")->ignore($id,"id_category")],
             'image' => ["sometimes", "image"],
         ], [
-            'category_name.unique' => `Kategori dengan nama ini sudah ada`,
+            'category_name.unique' => 'Kategori dengan nama ini sudah ada',
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();

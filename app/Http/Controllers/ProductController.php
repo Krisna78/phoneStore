@@ -8,6 +8,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -85,7 +86,7 @@ class ProductController extends Controller
     public function update(Request $request, Product $product, $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => ["required", "string","unique:products,name,".$id],
+            'name' => ["required", "string",Rule::unique("products","name")->ignore($id,"id_product")],
             'description' => ["required", "string"],
             'price' => ["required", "numeric"],
             'image' => ["sometimes", "image"],

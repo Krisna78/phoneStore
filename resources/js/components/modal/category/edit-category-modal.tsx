@@ -86,9 +86,12 @@ export default function EditCategoryModal({
           router.reload({ only: ["categories"] });
         }
       },
-      onError: (error) => {
-        console.error(error);
-        toast.error("Gagal memperbarui kategori. Coba lagi.");
+      onError: (errors) => {
+        if (errors.category_name) {
+            toast.error(errors.category_name);
+        } else {
+            toast.error("Gagal memperbarui kategori. Coba lagi.");
+        }
       },
     });
   }
