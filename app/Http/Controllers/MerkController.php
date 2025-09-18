@@ -17,7 +17,9 @@ class MerkController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            "merk_name" => ["required", "string"],
+            "merk_name" => ["required", "string","unique:merks,merk_name"],
+        ],[
+            "merk_name.unique" => "Nama merk ini sudah ada"
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -28,7 +30,9 @@ class MerkController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            "merk_name" => ["required", "string"],
+            "merk_name" => ["required", "string","unique:merks,merk_name,".$id],
+        ],[
+            "merk_name.unique" => "Nama merk ini sudah ada"
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();

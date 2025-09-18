@@ -251,57 +251,48 @@ class InvoiceController extends Controller
 
         return back()->with('success', 'Invoice berhasil dibatalkan.');
     }
-    public function purchase()
+    public function purchase(Request $request)
     {
-        $transactions = Invoice::with(['invoiceDetail.product', 'user'])
-            ->where('user_id', Auth::id())
-            ->latest()
-            ->paginate(10)
-            ->through(function ($invoice) {
-                return [
-                    'id'      => $invoice->id_invoice,
-                    'date'    => $invoice->invoice_date->format('d M Y'),
-                    'status'  => $invoice->status,
-                    'invoice' => $invoice->external_id ?? $invoice->id_invoice,
-                    'store'   => 'Toko Default',
-                    'expire_date' => $invoice->expire_date,
-                    'products' => $invoice->invoiceDetail->map(function ($detail) {
-                        return [
-                            'name'     => $detail->product->name,
-                            'quantity' => $detail->quantity,
-                            'price'    => $detail->line_total,
-                        ];
-                    })->values(),
-                    'total' => $invoice->payment_amount,
-                ];
-            });
+        $status = $request->query('status', 'Semua');
 
-        $allTransactions = Invoice::with(['invoiceDetail.product', 'user'])
-            ->where('user_id', Auth::id())
-            ->latest()
-            ->get()
-            ->map(function ($invoice) {
-                return [
-                    'id'      => $invoice->id_invoice,
-                    'date'    => $invoice->invoice_date->format('d M Y'),
-                    'status'  => $invoice->status,
-                    'invoice' => $invoice->external_id ?? $invoice->id_invoice,
-                    'store'   => 'Toko Default',
-                    'expire_date' => $invoice->expire_date,
-                    'products' => $invoice->invoiceDetail->map(function ($detail) {
-                        return [
-                            'name'     => $detail->product->name,
-                            'quantity' => $detail->quantity,
-                            'price'    => $detail->line_total,
-                        ];
-                    })->values(),
-                    'total' => $invoice->payment_amount,
-                ];
-            });
+    $transactions = Invoice::with(['invoiceDetail.product', 'user'])
+        ->where('user_id', Auth::id())
+        ->when($status !== 'Semua', function ($query) use ($status) {
+            if ($status === 'Berlangsung') {
+                $query->whereIn('status', ['Pending', 'Menunggu Pembayaran', 'Diproses']);
+            } elseif ($status === 'Berhasil') {
+                $query->whereIn('status', ['Selesai', 'Sudah dibayar', 'Berhasil']);
+            } elseif ($status === 'Tidak Berhasil') {
+                $query->whereIn('status', ['Batal', 'Gagal', 'Tidak Berhasil']);
+            }
+        })
+        ->latest()
+        ->paginate(10)
+        ->appends(['status' => $status]) // penting supaya pagination bawa status
+        ->through(function ($invoice) {
+            return [
+                'id'      => $invoice->id_invoice,
+                'date'    => $invoice->invoice_date->format('d M Y'),
+                'status'  => $invoice->status,
+                'invoice' => $invoice->external_id ?? $invoice->id_invoice,
+                'store'   => 'Toko Default',
+                'expire_date' => $invoice->expire_date,
+                'products' => $invoice->invoiceDetail->map(function ($detail) {
+                    return [
+                        'name'     => $detail->product->name,
+                        'quantity' => $detail->quantity,
+                        'price'    => $detail->line_total,
+                    ];
+                })->values(),
+                'total' => $invoice->payment_amount,
+            ];
+        });
 
-        return Inertia::render('invoices/purchase', [
-            'transactions' => $transactions,
-            'allTransactions' => $allTransactions
-        ]);
+    return Inertia::render('invoices/purchase', [
+        'transactions' => $transactions,
+        'filters' => [
+            'status' => $status,
+        ],
+    ]);
     }
 }

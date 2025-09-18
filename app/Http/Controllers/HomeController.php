@@ -123,7 +123,7 @@ class HomeController extends Controller
                     'price'    => null,
                     'brand'    => null,
                     'category' => null,
-                    'redirect'      => route('product.index', ['search' => $q]),
+                    'redirect'      => route('products.index', ['search' => $q]),
                 ];
             }
 

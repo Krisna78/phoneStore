@@ -61,12 +61,14 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => ["required", "string"],
+            'name' => ["required", "string","unique:products,name"],
             'description' => ["required", "string"],
             'price' => ["required", "numeric"],
             'image' => ["sometimes", "image"],
             'merk_id' => ["required", "exists:merks,id_merk"],
             'category_id' => ["required", "exists:categories,id_category"],
+        ],[
+            "name.unique" => "Nama Product ini sudah ada"
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -83,12 +85,14 @@ class ProductController extends Controller
     public function update(Request $request, Product $product, $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => ["required", "string"],
+            'name' => ["required", "string","unique:products,name,".$id],
             'description' => ["required", "string"],
             'price' => ["required", "numeric"],
             'image' => ["sometimes", "image"],
             'merk_id' => ["required", "exists:merks,id_merk"],
             'category_id' => ["required", "exists:categories,id_category"],
+        ],[
+            "name.unique" => "Nama Product ini sudah ada"
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();

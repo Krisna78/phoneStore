@@ -18,8 +18,10 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'category_name' => ['required', 'string'],
+            'category_name' => ['required', 'string', "unique:categories,category_name"],
             'image' => ["sometimes", "image"],
+        ], [
+            'category_name.unique' => 'Kategori dengan nama ini sudah ada.'
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -37,8 +39,10 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'category_name' => ['required', 'string'],
+            'category_name' => ['required', 'string', "unique:categories,category_name," . $id],
             'image' => ["sometimes", "image"],
+        ], [
+            'category_name.unique' => `Kategori dengan nama ini sudah ada`,
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
