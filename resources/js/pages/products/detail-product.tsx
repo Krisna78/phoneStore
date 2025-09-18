@@ -1,5 +1,5 @@
-import Footer from '@/components/Footer';
-import Header from '@/components/Header';
+import Footer2 from '@/components/Footer2';
+import Header2 from '@/components/Header2';
 import { Button } from '@/components/ui/button';
 import { Head, router, usePage } from '@inertiajs/react';
 import { CheckCircle, ChevronRight } from 'lucide-react';
@@ -123,7 +123,8 @@ export default function DetailProduct({ user, product }: DetailProductProps) {
     return (
         <div className="min-h-screen bg-white">
             <Head title={product.name} />
-            <Header user={user} cartItemCount={cartCount} />
+            {/* <Header user={user} cartItemCount={cartCount} /> */}
+            <Header2 user={user} cartItemCount={cartCount} />
 
             <main className="mx-auto max-w-7xl px-4 py-6">
                 {/* Breadcrumb */}
@@ -205,7 +206,7 @@ export default function DetailProduct({ user, product }: DetailProductProps) {
                 )}
             </main>
 
-            <Footer />
+            <Footer2 />
         </div>
     );
 }
