@@ -137,9 +137,10 @@ class ProductController extends Controller
         $products = Product::with(['merk', 'category'])
             ->where('category_id', $categoryId)
             ->get();
-
+        $brands = Merk::orderBy('merk_name')->get();
         return Inertia::render("products/list-product", [
             "products"   => $products,
+            "brands" => $brands,
             "categoryId" => $categoryId,
         ]);
     }
