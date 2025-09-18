@@ -34,11 +34,11 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
         $user = auth()->user();
         if ($user->hasRole('admin')) {
-        $request->session()->forget('url.intended');
+            $request->session()->forget('url.intended');
             return redirect()->route('dashboard');
         } else {
             $request->session()->forget('url.intended');
-            return redirect()->route('homepage');
+            return redirect()->route(route: 'homepage');
         }
     }
 

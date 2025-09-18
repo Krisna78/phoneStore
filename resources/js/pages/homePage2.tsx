@@ -2,38 +2,40 @@ import Footer2 from '@/components/Footer2';
 import Header2 from '@/components/Header2';
 import Layout from '@/components/Layout';
 import Banner from '@/components/ui/banner';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { ChevronRight } from 'lucide-react';
 
 export default function Homepage2({ banners }: { banners: string[] }) {
     console.log(banners); // cek hasil dari Laravel
+    const { auth } = usePage().props as { auth: { user: { name: string } | null } };
+
     return (
         <Layout>
             <Head title="PhoneStore - Belanja Gadget Terbaik" />
 
             {/* header start */}
-            <Header2 />
+            <Header2 user={auth.user} cartItemCount={0} />
             {/* header end */}
 
             {/* Hero Banner start*/}
             <Banner />
             {/* Hero Banner start*/}
 
-            <div className="mx-1 mt-1 px-4.5 md:mt-4 md:px-6">
+            <div className="mx-1 mt-1 px-4.5 md:mt-4 md:px-6 lg:px-9">
                 {/* bagaian kategori start */}
                 <div className="relative">
                     <div className="flex items-center justify-between align-middle">
-                        <h1 className="w-fit border-b-1 border-y-primary py-0.5 text-[10px] font-medium text-black md:border-b-2 md:text-[18px] lg:text-[22px]">
+                        <h1 className="w-fit border-b-1 border-y-primary py-0.5 text-[10px] font-medium text-black md:border-b-2 md:text-[18px] lg:border-b-3 lg:text-[26px]">
                             Kategori
                         </h1>
-                        <div className="flex cursor-pointer items-center justify-center gap-0.5 text-center align-middle">
-                            <Link href={route('homepage')} className="text-grey1 text-[7px] font-medium md:text-[12px]">
+                        <div className="flex cursor-pointer items-center justify-center gap-2 text-center align-middle">
+                            <Link href={route('homepage')} className="text-grey1 text-[7px] font-medium md:text-[12px] lg:text-[14px]">
                                 Lihat Semua
                             </Link>
                             <ChevronRight className="size-2 text-primary md:size-3" />
                         </div>{' '}
                     </div>
-                    <div className="scrollbar-hidden mt-4 mb-2 flex flex-row gap-2 overflow-x-scroll md:gap-3">
+                    <div className="scrollbar-hidden mt-4 mb-2 flex flex-row gap-2 overflow-x-scroll md:gap-3 lg:gap-4">
                         {[
                             {
                                 src: '/images/tab-kategori/hp.png',
@@ -60,7 +62,7 @@ export default function Homepage2({ banners }: { banners: string[] }) {
                             <Link
                                 key={idx}
                                 href={item.href}
-                                className="4 border-third3 flex h-fit w-fit flex-col items-center justify-center rounded-lg border-1 p-2 text-center align-middle md:px-3 lg:px-4"
+                                className="4 border-third3 flex h-fit w-fit flex-col items-center justify-center rounded-lg border-1 p-2 text-center align-middle md:p-3 lg:p-6"
                             >
                                 <div className="flex size-[70px] items-center justify-center lg:size-[85px]">
                                     <img
@@ -69,7 +71,7 @@ export default function Homepage2({ banners }: { banners: string[] }) {
                                         className={`h-[60px] w-[70px] object-contain md:h-[70px] md:w-[75px] lg:h-[80px] lg:w-[85px] ${item.padding}`}
                                     />
                                 </div>
-                                <h1 className="mt-2 text-[9px] font-medium text-primary md:text-[10px] lg:text-[12px]">{item.label}</h1>
+                                <h1 className="mt-2 text-[9px] font-medium text-primary md:text-[10px] lg:mt-4 lg:text-[13px]">{item.label}</h1>
                             </Link>
                         ))}
                     </div>
@@ -80,11 +82,11 @@ export default function Homepage2({ banners }: { banners: string[] }) {
             <div className="mx-1 mt-3 px-4.5 md:mt-6 lg:mt-9">
                 <div className="relative">
                     <div className="flex items-center justify-between align-middle">
-                        <h1 className="font-base w-fit border-b-1 border-y-primary py-0.5 text-[10px] text-black md:border-b-2 md:text-[18px] lg:text-[22px]">
+                        <h1 className="font-base w-fit border-b-1 border-y-primary py-0.5 text-[10px] text-black md:border-b-2 md:text-[18px] lg:border-b-3 lg:text-[26px]">
                             Pilihan terbaik untuk <span className="font-bold text-primary">Smartphone</span>
                         </h1>
                         <div className="flex cursor-pointer items-center justify-center gap-1 text-center align-middle">
-                            <Link href={route('homepage')} className="text-grey1 text-[7px] font-medium md:text-[12px]">
+                            <Link href={route('homepage')} className="text-grey1 text-[7px] font-medium md:text-[12px] lg:text-[14px]">
                                 Lihat Semua
                             </Link>
                             <ChevronRight className="ml-1 size-2 text-primary md:size-3.5" />
@@ -150,15 +152,15 @@ export default function Homepage2({ banners }: { banners: string[] }) {
                                             {/* Judul produk, whitespace-normal akan membuat teks turun ke baris baru jika terlalu panjang */}
                                             <div className="mt-1.5 grid grid-cols-2 items-center gap-1.5">
                                                 {/* Harga produk */}
-                                                <p className="w-[70px] text-[10px] font-semibold text-primary lg:w-[100px] lg:text-[14px]">
+                                                <p className="w-[70px] text-[10px] font-semibold text-primary lg:w-[100px] lg:text-[15px]">
                                                     {produk.price}
                                                 </p>
                                                 {/* Discount badge */}
-                                                <p className="border-warning bg-warning/30 text-warning ml-auto w-fit items-center justify-center rounded-md border-1 px-1 py-0.5 align-middle text-[8px]">
+                                                <p className="ml-auto w-fit items-center justify-center rounded-md border-1 border-amber-200 bg-amber-500 px-1 py-0.5 align-middle text-[8px] text-white lg:px-2 lg:text-[10px]">
                                                     30 %
                                                 </p>
                                             </div>
-                                            <span className="text-grey1 lg:text-[11.5px]">200 Terjual</span>
+                                            <span className="text-grey1 lg:text-[12px]">200 Terjual</span>
                                         </div>
                                     </Link>
                                 ))}

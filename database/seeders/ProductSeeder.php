@@ -33,7 +33,7 @@ class ProductSeeder extends Seeder
             'description' => 'Tablet Xiaomi Pad 6 dengan Snapdragon 870 dan layar 120Hz.',
             'price' => 6500000,
             'image' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSCk_vp0eyHTKYJpTeumeefipaUwvkI1-BqJw&s',
-            'merk_id' => 3,
+            'merk_id' => 4,
             'category_id' => 2,
         ]);
 
@@ -42,7 +42,7 @@ class ProductSeeder extends Seeder
             'description' => 'Earbuds TWS Oppo Enco Buds2 dengan suara bass yang kuat.',
             'price' => 500000,
             'image' => 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4bOSE7_hdQ2PdouN7zGgnqKnohv0zQ5OvNg&s',
-            'merk_id' => 4,
+            'merk_id' => 1,
             'category_id' => 3,
         ]);
     }

@@ -7,8 +7,8 @@ import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import AuthLayout from '@/layouts/auth-layout';
-import { Textarea } from "@/components/ui/textarea";
 
 type RegisterForm = {
     name: string;
@@ -81,7 +81,7 @@ export default function Register() {
                             type="text"
                             required
                             autoFocus
-                            datatype='numeric'
+                            datatype="numeric"
                             tabIndex={1}
                             autoComplete="phone"
                             value={data.phone}
@@ -98,7 +98,7 @@ export default function Register() {
                             id="address"
                             required
                             autoFocus
-                            datatype=''
+                            datatype=""
                             tabIndex={1}
                             autoComplete="address"
                             value={data.address}

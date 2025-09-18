@@ -76,7 +76,7 @@ class HomeController extends Controller
         if ($user?->hasRole('admin')) {
             return redirect()->route('dashboard');
         }
-        return Inertia::render('homepage', [
+        return Inertia::render('homepage2', [
             'user'              => $user,
             'categories'        => $categories,
             'productsByCategory' => $productsByCategory,

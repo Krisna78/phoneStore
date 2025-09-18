@@ -77,6 +77,7 @@ export default function Footer2() {
                     <p>Cookie settings</p>
                     <p>Terms and conditions</p>
                 </div>
+
             </div>
         </div>
     );

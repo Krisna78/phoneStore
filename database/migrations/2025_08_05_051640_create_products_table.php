@@ -15,7 +15,7 @@ return new class extends Migration
             $table->bigIncrements('id_product')->primary();
             $table->string('name');
             $table->longText('description');
-            $table->decimal("price");
+            $table->bigInteger(column: "price");
             $table->string("image")->default("image");
             $table->unsignedBigInteger('merk_id');
             $table->unsignedBigInteger('category_id');

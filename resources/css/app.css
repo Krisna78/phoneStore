@@ -36,7 +36,7 @@
     --color-succees: oklch(71.391% 0.17617 153.102);
     --color-danger: oklch(54.035% 0.2189 27.159);
     --color-warning: oklch(78.672% 0.16076 90.978);
-    --color-discount: #f2e002;
+    --color-discount: oklch(89.303% 0.18798 103.643);
     /* warna baru end */
     --secondary-foreground: oklch(0.4461 0.0263 256.8018);
     --muted: oklch(0.9846 0.0017 247.8389);

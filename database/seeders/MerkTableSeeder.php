@@ -14,15 +14,22 @@ class MerkTableSeeder extends Seeder
     public function run(): void
     {
         Merk::create([
+            "id_merk" => 1,
             'merk_name' => 'Oppo',
         ]);
 
         Merk::create([
+            'id_merk' => 2,
             'merk_name' => 'Vivo',
         ]);
 
         Merk::create([
+            'id_merk' => 3,
             'merk_name' => 'Samsung',
+        ]);
+        Merk::create([
+            'id_merk' => 4,
+            'merk_name' => 'Xiaomi',
         ]);
     }
 }
