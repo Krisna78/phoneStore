@@ -6,6 +6,7 @@ import { Head } from '@inertiajs/react';
 import * as React from 'react';
 import { toast } from 'sonner';
 
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
     ColumnDef,
     flexRender,
@@ -21,7 +22,6 @@ import { ArrowUpDown, ChevronDown } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useEffect } from 'react';
@@ -52,11 +52,15 @@ interface CategoryTableProps {
 }
 
 export default function CategoryTable({ categories: initialCategories, flash }: CategoryTableProps) {
-    const [, setCategories] = React.useState<CategoryType[]>(initialCategories ?? []);
+    const [categories, setCategories] = React.useState<CategoryType[]>(initialCategories ?? []);
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = React.useState('');
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
+
+    useEffect(() => {
+        setCategories(initialCategories ?? []);
+    }, [initialCategories]);
 
     useEffect(() => {
         if (flash?.success) toast.success(flash.success);
@@ -84,12 +88,13 @@ export default function CategoryTable({ categories: initialCategories, flash }: 
             header: 'Image',
             cell: ({ row }) => {
                 const category = row.original;
-                const imageUrl = category?.image
+                if (!category) return null;
+                const imageUrl = category.image
                     ? category.image.startsWith('http')
                         ? category.image
                         : `/storage/${category.image}`
                     : '/placeholder.png';
-                return <img src={imageUrl} alt={category.category_name} className="h-16 w-16 rounded-md object-cover" />;
+                return <img src={imageUrl} alt={category?.category_name ?? 'No name'} className="h-16 w-16 rounded-md object-cover" />;
             },
         },
         {
@@ -100,28 +105,32 @@ export default function CategoryTable({ categories: initialCategories, flash }: 
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             ),
+            cell: ({ row }) => row.original?.category_name ?? '-',
         },
         {
             id: 'actions',
             header: 'Action',
-            cell: ({ row }) => (
-                <div className="flex items-center gap-2">
-                    <EditCategoryModal category={row.original} />
-                    <DeleteCategoryModal
-                        id={row.original.id_category}
-                        name={row.original.category_name}
-                        onSuccess={(deletedId) => {
-                            setCategories((prev) => prev.filter((c) => c.id_category !== deletedId));
-                            // toast.success('Kategori berhasil dihapus!');
-                        }}
-                    />
-                </div>
-            ),
+            cell: ({ row }) => {
+                const category = row.original;
+                if (!category) return null;
+                return (
+                    <div className="flex items-center gap-2">
+                        <EditCategoryModal category={category} />
+                        <DeleteCategoryModal
+                            id={category.id_category}
+                            name={category.category_name}
+                            onSuccess={(deletedId) => {
+                                setCategories((prev) => prev.filter((c) => c.id_category !== deletedId));
+                            }}
+                        />
+                    </div>
+                );
+            },
         },
     ];
 
     const table = useReactTable({
-        data: initialCategories,
+        data: categories,
         columns,
         state: {
             sorting,
@@ -139,7 +148,7 @@ export default function CategoryTable({ categories: initialCategories, flash }: 
         onRowSelectionChange: setRowSelection,
         globalFilterFn: (row, _columnId, filterValue) => {
             const search = filterValue.toLowerCase();
-            return row.original.category_name.toLowerCase().includes(search);
+            return row.original?.category_name?.toLowerCase().includes(search) ?? false;
         },
     });
 
@@ -225,9 +234,7 @@ export default function CategoryTable({ categories: initialCategories, flash }: 
                         <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
                             Previous
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-                            Next
-                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}></Button>
                     </div>
                 </div>
             </div>

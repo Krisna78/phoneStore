@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Merk;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
@@ -17,7 +18,9 @@ class MerkController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            "merk_name" => ["required", "string"],
+            "merk_name" => ["required", "string", "unique:merks,merk_name"],
+        ], [
+            "merk_name.unique" => "Nama merk ini sudah ada"
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -28,7 +31,9 @@ class MerkController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            "merk_name" => ["required", "string"],
+            "merk_name" => ["required", "string", Rule::unique('merks', 'merk_name')->ignore($id, 'id_merk')],
+        ], [
+            "merk_name.unique" => "Nama merk ini sudah ada"
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();

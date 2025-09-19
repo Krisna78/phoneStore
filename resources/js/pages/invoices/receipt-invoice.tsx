@@ -24,8 +24,6 @@ type Invoice = {
 
 export default function Receipt({ invoice }: { invoice: Invoice }) {
   const isPaid = invoice.status === "Sudah dibayar"
-
-  // Fungsi cek apakah link URL absolute (http/https) atau storage
   const getImageUrl = (imageUrl?: string) => {
     if (!imageUrl) return null
     if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {

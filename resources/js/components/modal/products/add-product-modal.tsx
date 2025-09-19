@@ -79,8 +79,12 @@ export function AddProductModal({ merk, category, onSuccess }: AddProductModalPr
                     onSuccess(newProduct);
                 }
             },
-            onError: () => {
-                toast.error('Gagal menambahkan produk');
+            onError: (errors) => {
+                if (errors.name) {
+                    toast.error(errors.name);
+                } else {
+                    toast.error('Gagal menambahkan produk');
+                }
             },
         });
     };

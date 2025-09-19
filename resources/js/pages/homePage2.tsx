@@ -1,4 +1,5 @@
 import CategoryCard from '@/components/card-category';
+import ProductCard from '@/components/card-product';
 import Footer2 from '@/components/Footer2';
 import Header2 from '@/components/Header2';
 import Layout from '@/components/Layout';
@@ -16,28 +17,35 @@ type ProductItem = {
     id_product: number;
     name: string;
     price: number;
-    originalPrice: number;
-    discount: number;
+    soldCount?: number;
     image: string;
 };
 
 type HomepageProps = {
-    user: { name: string } | null;
+    user: { name: string; role?: string } | null;
     categories: CategoryItem[];
     banners: string[];
-    productsByCategory: Record<string, ProductItem[]>;
+    products: ProductItem[];
 };
 
-export default function Homepage2({ user, categories, productsByCategory, banners }: HomepageProps) {
+export default function Homepage2({ user, categories, banners, products }: HomepageProps) {
     const cartCount = usePage().props.cartCount as number;
-    const { auth } = usePage().props as { auth: { user: { name: string } | null } };
+    // Ambil kategori dari props
+    const smartphoneCategory = categories.find((cat) => cat.category_name === 'Smartphone');
+    const tabletCategory = categories.find((cat) => cat.category_name === 'Tablet');
+    const laptopCategory = categories.find((cat) => cat.category_name === 'Laptop');
+    // Filter produk sesuai kategori
+    const smartphoneProducts = products.filter((p) => p.category.id_category === smartphoneCategory?.id_category).slice(0, 3);
+    const tabletProducts = products.filter((p) => p.category.id_category === tabletCategory?.id_category).slice(0, 3);
+    const laptopProducts = products.filter((p) => p.category.id_category === laptopCategory?.id_category).slice(0, 3);
+    console.log(products);
 
     return (
         <Layout>
             <Head title="PhoneStore - Belanja Gadget Terbaik" />
 
             {/* header start */}
-            <Header2 user={auth.user} cartItemCount={cartCount} />
+            <Header2 user={user} cartItemCount={cartCount} />
             {/* header end */}
 
             {/* Hero Banner start*/}
@@ -52,11 +60,11 @@ export default function Homepage2({ user, categories, productsByCategory, banner
                             Kategori
                         </h1>
                         <div className="flex cursor-pointer items-center justify-center gap-2 text-center align-middle">
-                            <Link href={route('homepage')} className="text-[7px] font-medium text-grey1 md:text-[12px] lg:text-[14px]">
+                            <Link href={route('product.list.all')} className="text-[7px] font-medium text-grey1 md:text-[12px] lg:text-[14px]">
                                 Lihat Semua
                             </Link>
                             <ChevronRight className="size-2 text-primary md:size-3" />
-                        </div>{' '}
+                        </div>
                     </div>
                     <div className="scrollbar-hidden mt-4 mb-2 flex flex-row gap-2 overflow-x-scroll md:gap-3 lg:gap-4">
                         {categories.map((cat) => (
@@ -67,7 +75,7 @@ export default function Homepage2({ user, categories, productsByCategory, banner
                                     src: cat.image,
                                     alt: cat.category_name,
                                     category_name: cat.category_name,
-                                    href: `/categories/${cat.id_category}`,
+                                    href: `/list_product/${cat.id_category}`,
                                     label: cat.category_name,
                                 }}
                             />
@@ -84,7 +92,7 @@ export default function Homepage2({ user, categories, productsByCategory, banner
                             Pilihan terbaik untuk <span className="font-bold text-primary">Smartphone</span>
                         </h1>
                         <div className="flex cursor-pointer items-center justify-center gap-1 text-center align-middle">
-                            <Link href={route('homepage')} className="text-[7px] font-medium text-grey1 md:text-[12px] lg:text-[14px]">
+                            <Link href={route('products.list.categories', { id: smartphoneCategory?.id_category })} className="text-[7px] font-medium text-grey1 md:text-[12px] lg:text-[14px]">
                                 Lihat Semua
                             </Link>
                             <ChevronRight className="ml-1 size-2 text-primary md:size-3.5" />
@@ -93,78 +101,26 @@ export default function Homepage2({ user, categories, productsByCategory, banner
                 </div>
                 {/* product card */}
                 <div className="scrollbar-hidden relative mt-4 mb-2 flex scroll-m-1 flex-row gap-2.5 overflow-x-scroll scroll-smooth lg:mt-6">
-                    {/* <div className="relative mx-2 mt-4 mb-3 grid grid-cols-2 gap-3.5 lg:mt-6"> */}
-                    {/* Dummy data produk */}
-                    {[
-                        {
-                            src: '/images/produk/hp2.png',
-                            alt: 'kategori-tablet',
-                            href: '/kategori/tablet',
-                        },
-                        {
-                            src: '/images/produk/hp3.PNG',
-                            alt: 'kategori-tablet',
-                            href: '/kategori/tablet',
-                        },
-                        {
-                            src: '/images/produk/hp2.png',
-                            alt: 'kategori-tablet',
-                            href: '/kategori/tablet',
-                        },
-                        {
-                            src: '/images/produk/hp3.PNG',
-                            alt: 'kategori-tablet',
-                            href: '/kategori/tablet',
-                        },
-
-                        // Tambahkan produk lainnya sesuai kebutuhan
-                    ].map((foto_produk, idx) => (
-                        <div className="relative h-fit w-fit rounded-md border-1 border-grey2 bg-white">
-                            <div key={idx} className="rounded-t-md bg-grey5 p-2 shadow-md">
-                                <div className="mt-3 h-[100px] w-[95px] md:h-[110px] md:w-[120px] lg:h-[150px] lg:w-[160px]">
-                                    {/* masuk ke halam detail produk */}
-                                    <Link href={foto_produk.href}>
-                                        <div className="flex h-full w-full items-center justify-center object-contain p-0.5 text-center align-middle">
-                                            <img
-                                                src={foto_produk.src}
-                                                alt={foto_produk.alt}
-                                                className="h-full w-fit object-contain" // Pastikan gambar mengisi seluruh area div
-                                            />
-                                        </div>
-                                    </Link>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start justify-start p-2 text-left text-wrap">
-                                {[
-                                    {
-                                        h1: 'Infinix Smart 10 Plus 8/128GB - Black',
-                                        price: 'Rp. 2.500.000',
-                                        discount: 'Rp. 2.800.000',
-                                    },
-                                ].map((produk, idx) => (
-                                    <Link key={idx} href={'produk.href'}>
-                                        <div className="flex h-fit w-[100px] flex-col gap-1.5 py-1.5 text-[10px] md:w-[120px] md:text-[11.5px] lg:w-[160px]">
-                                            {/* Menggunakan text-sm dan whitespace-normal untuk memecah kata jika terlalu panjang */}
-                                            <h1 className="font-normal break-words whitespace-normal text-black">{produk.h1}</h1>
-                                            {/* Judul produk, whitespace-normal akan membuat teks turun ke baris baru jika terlalu panjang */}
-                                            <div className="mt-1.5 grid grid-cols-2 items-center gap-1.5">
-                                                {/* Harga produk */}
-                                                <p className="w-[70px] text-[10px] font-semibold text-primary lg:w-[100px] lg:text-[15px]">
-                                                    {produk.price}
-                                                </p>
-                                                {/* Discount badge */}
-                                                <p className="ml-auto w-fit items-center justify-center rounded-md border-1 border-amber-200 bg-discount px-1 py-0.5 align-middle text-[8px] text-black lg:px-2 lg:text-[10px]">
-                                                    30 %
-                                                </p>
-                                            </div>
-                                            <span className="text-grey1 lg:text-[12px]">200 Terjual</span>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
+                    {products.length > 0 ? (
+                        smartphoneProducts?.map((product: ProductItem) => (
+                            <ProductCard
+                                key={product.id_product}
+                                product={{
+                                    ...product,
+                                    soldCount: product.soldCount ?? 200, // contoh default sementara
+                                }}
+                                formatPrice={(price) =>
+                                    new Intl.NumberFormat('id-ID', {
+                                        style: 'currency',
+                                        currency: 'IDR',
+                                        maximumFractionDigits: 0,
+                                    }).format(Number(price))
+                                }
+                            />
+                        ))
+                    ) : (
+                        <p className="col-span-full text-gray-500">Tidak ada produk untuk kategori ini.</p>
+                    )}
                 </div>
             </div>
             {/* best choice smartphone section end */}
@@ -177,7 +133,7 @@ export default function Homepage2({ user, categories, productsByCategory, banner
                             Pilihan terbaik untuk <span className="font-bold text-primary">Tablet</span>
                         </h1>
                         <div className="flex cursor-pointer items-center justify-center gap-1 text-center align-middle">
-                            <Link href={route('homepage')} className="text-[7px] font-medium text-grey1 md:text-[12px] lg:text-[14px]">
+                            <Link href={route('products.list.categories', { id: tabletCategory?.id_category })} className="text-[7px] font-medium text-grey1 md:text-[12px] lg:text-[14px]">
                                 Lihat Semua
                             </Link>
                             <ChevronRight className="ml-1 size-2 text-primary md:size-3.5" />
@@ -186,78 +142,26 @@ export default function Homepage2({ user, categories, productsByCategory, banner
                 </div>
                 {/* product card */}
                 <div className="scrollbar-hidden relative mt-4 mb-2 flex scroll-m-1 flex-row gap-2.5 overflow-x-scroll scroll-smooth lg:mt-6">
-                    {/* <div className="relative mx-2 mt-4 mb-3 grid grid-cols-2 gap-3.5 lg:mt-6"> */}
-                    {/* Dummy data produk */}
-                    {[
-                        {
-                            src: '/images/produk/tab.png',
-                            alt: 'kategori-tablet',
-                            href: '/kategori/tablet',
-                        },
-                        {
-                            src: '/images/tab-kategori/tablet.png',
-                            alt: 'kategori-tablet',
-                            href: '/kategori/tablet',
-                        },
-                        {
-                            src: '/images/tab-kategori/tablet2.png',
-                            alt: 'kategori-tablet',
-                            href: '/kategori/tablet',
-                        },
-                        {
-                            src: '/images/tab-kategori/tablet2.png',
-                            alt: 'kategori-tablet',
-                            href: '/kategori/tablet',
-                        },
-
-                        // Tambahkan produk lainnya sesuai kebutuhan
-                    ].map((foto_produk, idx) => (
-                        <div className="relative h-fit w-fit rounded-md border-1 border-grey2 bg-white">
-                            <div key={idx} className="rounded-t-md bg-grey5 p-2 shadow-md">
-                                <div className="mt-3 h-[100px] w-[95px] md:h-[110px] md:w-[120px] lg:h-[150px] lg:w-[160px]">
-                                    {/* masuk ke halam detail produk */}
-                                    <Link href={foto_produk.href}>
-                                        <div className="flex h-full w-full items-center justify-center object-contain p-0.5 text-center align-middle">
-                                            <img
-                                                src={foto_produk.src}
-                                                alt={foto_produk.alt}
-                                                className="h-full w-fit object-contain" // Pastikan gambar mengisi seluruh area div
-                                            />
-                                        </div>
-                                    </Link>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start justify-start p-2 text-left text-wrap">
-                                {[
-                                    {
-                                        h1: 'Infinix Smart 10 Plus 8/128GB - Black',
-                                        price: 'Rp. 2.500.000',
-                                        discount: 'Rp. 2.800.000',
-                                    },
-                                ].map((produk, idx) => (
-                                    <Link key={idx} href={'produk.href'}>
-                                        <div className="flex h-fit w-[100px] flex-col gap-1.5 py-1.5 text-[10px] md:w-[120px] md:text-[11.5px] lg:w-[160px]">
-                                            {/* Menggunakan text-sm dan whitespace-normal untuk memecah kata jika terlalu panjang */}
-                                            <h1 className="font-normal break-words whitespace-normal text-black">{produk.h1}</h1>
-                                            {/* Judul produk, whitespace-normal akan membuat teks turun ke baris baru jika terlalu panjang */}
-                                            <div className="mt-1.5 grid grid-cols-2 items-center gap-1.5">
-                                                {/* Harga produk */}
-                                                <p className="w-[70px] text-[10px] font-semibold text-primary lg:w-[100px] lg:text-[15px]">
-                                                    {produk.price}
-                                                </p>
-                                                {/* Discount badge */}
-                                                <p className="ml-auto w-fit items-center justify-center rounded-md border-1 border-amber-200 bg-amber-500 px-1 py-0.5 align-middle text-[8px] text-white lg:px-2 lg:text-[10px]">
-                                                    30 %
-                                                </p>
-                                            </div>
-                                            <span className="text-grey1 lg:text-[12px]">200 Terjual</span>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
+                    {products.length > 0 ? (
+                        tabletProducts?.map((product: ProductItem) => (
+                            <ProductCard
+                                key={product.id_product}
+                                product={{
+                                    ...product,
+                                    soldCount: product.soldCount ?? 200, // contoh default sementara
+                                }}
+                                formatPrice={(price) =>
+                                    new Intl.NumberFormat('id-ID', {
+                                        style: 'currency',
+                                        currency: 'IDR',
+                                        maximumFractionDigits: 0,
+                                    }).format(Number(price))
+                                }
+                            />
+                        ))
+                    ) : (
+                        <p className="col-span-full text-gray-500">Tidak ada produk untuk kategori ini.</p>
+                    )}
                 </div>
             </div>
             {/* best choice  tablet section end */}
@@ -270,7 +174,7 @@ export default function Homepage2({ user, categories, productsByCategory, banner
                             Pilihan terbaik untuk <span className="font-bold text-primary">Laptop</span>
                         </h1>
                         <div className="flex cursor-pointer items-center justify-center gap-1 text-center align-middle">
-                            <Link href={route('homepage')} className="text-[7px] font-medium text-grey1 md:text-[12px] lg:text-[14px]">
+                            <Link href={route('products.list.categories', { id: laptopCategory?.id_category })} className="text-[7px] font-medium text-grey1 md:text-[12px] lg:text-[14px]">
                                 Lihat Semua
                             </Link>
                             <ChevronRight className="ml-1 size-2 text-primary md:size-3.5" />
@@ -281,76 +185,26 @@ export default function Homepage2({ user, categories, productsByCategory, banner
                 <div className="scrollbar-hidden relative mt-4 mb-2 flex scroll-m-1 flex-row gap-2.5 overflow-x-scroll scroll-smooth lg:mt-6">
                     {/* <div className="relative mx-2 mt-4 mb-3 grid grid-cols-2 gap-3.5 lg:mt-6"> */}
                     {/* Dummy data produk */}
-                    {[
-                        {
-                            src: '/images/produk/laptop.png',
-                            alt: 'kategori-tablet',
-                            href: '/kategori/tablet',
-                        },
-                        {
-                            src: '/images/tab-kategori/laptop.png',
-                            alt: 'kategori-tablet',
-                            href: '/kategori/tablet',
-                        },
-                        {
-                            src: '/images/produk/laptop.png',
-                            alt: 'kategori-tablet',
-                            href: '/kategori/tablet',
-                        },
-                        {
-                            src: '/images/tab-kategori/laptop.png',
-                            alt: 'kategori-tablet',
-                            href: '/kategori/tablet',
-                        },
-
-                        // Tambahkan produk lainnya sesuai kebutuhan
-                    ].map((foto_produk, idx) => (
-                        <div className="relative h-fit w-fit rounded-md border-1 border-grey2 bg-white">
-                            <div key={idx} className="rounded-t-md bg-grey5 p-2 shadow-md">
-                                <div className="mt-3 h-[100px] w-[95px] md:h-[110px] md:w-[120px] lg:h-[150px] lg:w-[160px]">
-                                    {/* masuk ke halam detail produk */}
-                                    <Link href={foto_produk.href}>
-                                        <div className="flex h-full w-full items-center justify-center object-contain p-0.5 text-center align-middle">
-                                            <img
-                                                src={foto_produk.src}
-                                                alt={foto_produk.alt}
-                                                className="h-full w-fit object-contain" // Pastikan gambar mengisi seluruh area div
-                                            />
-                                        </div>
-                                    </Link>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start justify-start p-2 text-left text-wrap">
-                                {[
-                                    {
-                                        h1: 'Infinix Smart 10 Plus 8/128GB - Black',
-                                        price: 'Rp. 2.500.000',
-                                        discount: 'Rp. 2.800.000',
-                                    },
-                                ].map((produk, idx) => (
-                                    <Link key={idx} href={'produk.href'}>
-                                        <div className="flex h-fit w-[100px] flex-col gap-1.5 py-1.5 text-[10px] md:w-[120px] md:text-[11.5px] lg:w-[160px]">
-                                            {/* Menggunakan text-sm dan whitespace-normal untuk memecah kata jika terlalu panjang */}
-                                            <h1 className="font-normal break-words whitespace-normal text-black">{produk.h1}</h1>
-                                            {/* Judul produk, whitespace-normal akan membuat teks turun ke baris baru jika terlalu panjang */}
-                                            <div className="mt-1.5 grid grid-cols-2 items-center gap-1.5">
-                                                {/* Harga produk */}
-                                                <p className="w-[70px] text-[10px] font-semibold text-primary lg:w-[100px] lg:text-[15px]">
-                                                    {produk.price}
-                                                </p>
-                                                {/* Discount badge */}
-                                                <p className="ml-auto w-fit items-center justify-center rounded-md border-1 border-amber-200 bg-amber-500 px-1 py-0.5 align-middle text-[8px] text-white lg:px-2 lg:text-[10px]">
-                                                    30 %
-                                                </p>
-                                            </div>
-                                            <span className="text-grey1 lg:text-[12px]">200 Terjual</span>
-                                        </div>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
+                    {products.length > 0 ? (
+                        laptopProducts?.map((product: ProductItem) => (
+                            <ProductCard
+                                key={product.id_product}
+                                product={{
+                                    ...product,
+                                    soldCount: product.soldCount ?? 200, // contoh default sementara
+                                }}
+                                formatPrice={(price) =>
+                                    new Intl.NumberFormat('id-ID', {
+                                        style: 'currency',
+                                        currency: 'IDR',
+                                        maximumFractionDigits: 0,
+                                    }).format(Number(price))
+                                }
+                            />
+                        ))
+                    ) : (
+                        <p className="col-span-full text-gray-500">Tidak ada produk untuk kategori ini.</p>
+                    )}
                 </div>
             </div>
 

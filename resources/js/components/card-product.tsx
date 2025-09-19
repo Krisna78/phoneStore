@@ -4,9 +4,12 @@ type ProductItem = {
     id_product: number;
     name: string;
     price: number;
-    originalPrice: number;
-    discount: number;
     image: string;
+    soldCount?: number; // jumlah terjual dari invoice
+    category: {
+        id_category: number;
+        category_name: string;
+    };
 };
 
 type Props = {
@@ -16,31 +19,36 @@ type Props = {
 
 export default function ProductCard({ product, formatPrice }: Props) {
     return (
-        <Link
-            href={route('products.show.details', { id: product.id_product })}
-            className="group overflow-hidden rounded-lg bg-white shadow-sm transition-all hover:shadow-md"
-        >
-            {/* Gambar produk */}
-            <div className="relative aspect-square overflow-hidden">
-                <img
-                    src={product.image.startsWith('http') ? product.image : `/storage/${product.image}`}
-                    alt={product.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                />
-                {product.discount > 0 && (
-                    <span className="absolute top-2 left-2 rounded bg-yellow-400 px-2 py-1 text-xs font-bold">{product.discount}% off</span>
-                )}
-            </div>
+        <div className="relative h-fit w-fit rounded-lg border-1 border-grey2 bg-white">
+            <div>
+                <Link
+                    href={route('products.show.details', { id: product.id_product })}
+                    className="group overflow-hidden rounded-lg bg-white shadow-sm transition-all hover:shadow-md"
+                >
+                    {/* Gambar produk */}
+                    <div className="rounded-t-md bg-grey5 p-2 shadow-md">
+                        <div className="mt-3 h-[100px] w-[95px] md:h-[110px] md:w-[120px] lg:h-[140px] lg:w-[150px]">
+                            <img
+                                src={product.image.startsWith('http') ? product.image : `/storage/${product.image}`}
+                                alt={product.name}
+                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                loading="lazy"
+                            />
+                        </div>
+                    </div>
 
-            {/* Info produk */}
-            <div className="p-3">
-                <h3 className="line-clamp-2 text-sm leading-tight font-semibold text-gray-800">{product.name}</h3>
-                <div className="mt-2">
-                    <p className="font-bold text-blue-600">{formatPrice(product.price)}</p>
-                    {product.originalPrice > 0 && <p className="text-xs text-gray-400 line-through">{formatPrice(product.originalPrice)}</p>}
-                </div>
+                    {/* Info produk */}
+                    <div className="flex h-full w-full justify-start object-contain align-middle lg:px-1 lg:py-3">
+                        <div className="p-2">
+                            <h3 className="line-clamp-2 text-sm leading-tight font-black text-black lg:text-[15px]">{product.name}</h3>
+                            <div className="mt-2">
+                                <p className="font-semibold text-blue-600">{formatPrice(product.price)}</p>
+                                {product.soldCount !== undefined && <span className="text-xs text-gray-500">{product.soldCount} Terjual</span>}
+                            </div>
+                        </div>
+                    </div>
+                </Link>
             </div>
-        </Link>
+        </div>
     );
 }

@@ -24,5 +24,9 @@ class CategorySeeder extends Seeder
             'category_name' => 'Laptop',
             'image' => 'https://www.asus.com/media/Odin/Websites/global/Series/9.png',
         ]);
+        Category::create([
+            'category_name' => 'Aksesoris',
+            'image' => 'https://png.pngtree.com/png-vector/20240603/ourmid/pngtree-wireless-tws-earbuds-icon-isolated-3d-render-illustration-png-image_12605695.png',
+        ]);
     }
 }

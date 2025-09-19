@@ -31,5 +31,13 @@ class MerkTableSeeder extends Seeder
             'id_merk' => 4,
             'merk_name' => 'Xiaomi',
         ]);
+        Merk::create([
+            'id_merk' => 5,
+            'merk_name' => 'Huawei',
+        ]);
+        Merk::create([
+            'id_merk' => 6,
+            'merk_name' => 'Dell',
+        ]);
     }
 }

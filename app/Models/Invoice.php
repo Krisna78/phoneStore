@@ -22,6 +22,8 @@ class Invoice extends Model
     ];
     protected $casts = [
         'invoice_date' => 'datetime',
+        'payment_date' => 'datetime',
+        'expire_date' => 'datetime',
         'created_at'   => 'datetime',
         'updated_at'   => 'datetime',
     ];

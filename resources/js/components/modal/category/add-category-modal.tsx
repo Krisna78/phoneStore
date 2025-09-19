@@ -64,8 +64,12 @@ export default function AddCategoryModal({ onSuccess }: AddCategoryModalProps) {
         setOpen(false);
         if (onSuccess) onSuccess();
       },
-      onError: () => {
-        toast.error("Gagal menambahkan kategori. Coba lagi.");
+      onError: (errors) => {
+        if (errors.category_name) {
+            toast.error(errors.category_name);
+        } else {
+            toast.error("Gagal memperbarui kategori. Coba lagi.");
+        }
       },
     });
   }

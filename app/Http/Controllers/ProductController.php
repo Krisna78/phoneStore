@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Merk;
 use App\Models\Product;
+use App\Models\Invoice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -61,12 +63,14 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => ["required", "string"],
+            'name' => ["required", "string", "unique:products,name"],
             'description' => ["required", "string"],
             'price' => ["required", "numeric"],
             'image' => ["sometimes", "image"],
             'merk_id' => ["required", "exists:merks,id_merk"],
             'category_id' => ["required", "exists:categories,id_category"],
+        ], [
+            "name.unique" => "Nama Product ini sudah ada"
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -83,12 +87,14 @@ class ProductController extends Controller
     public function update(Request $request, Product $product, $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => ["required", "string"],
+            'name' => ["required", "string", Rule::unique("products", "name")->ignore($id, "id_product")],
             'description' => ["required", "string"],
             'price' => ["required", "numeric"],
             'image' => ["sometimes", "image"],
             'merk_id' => ["required", "exists:merks,id_merk"],
             'category_id' => ["required", "exists:categories,id_category"],
+        ], [
+            "name.unique" => "Nama Product ini sudah ada"
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -129,15 +135,46 @@ class ProductController extends Controller
     }
     public function listProduct($categoryId)
     {
-        $category = Category::findOrFail($categoryId);
-
-        $products = Product::with(['merk', 'category'])
-            ->where('category_id', $categoryId)
+        $products = Product::with('merk', 'category')->where('category_id', $categoryId)->get();
+        // Ambil semua invoice "Sudah dibayar" yang berisi produk tersebut
+        $invoices = Invoice::with(['invoiceDetails.product'])
+            ->where('status', 'Sudah dibayar')
             ->get();
 
-        return Inertia::render("products/list-product", [
-            "products"   => $products,
-            "categoryId" => $categoryId,
+        // Hitung soldCount per product
+        $soldCounts = [];
+        foreach ($invoices as $invoice) {
+            foreach ($invoice->invoiceDetails as $detail) {
+                $pid = $detail->product->id_product;
+                if (!isset($soldCounts[$pid])) {
+                    $soldCounts[$pid] = 0;
+                }
+                $soldCounts[$pid] += $detail->quantity;
+            }
+        }
+
+        // Tambahkan soldCount ke masing-masing product
+        $products->transform(function ($product) use ($soldCounts) {
+            $product->soldCount = $soldCounts[$product->id_product] ?? 0;
+            return $product;
+        });
+
+        $brands = Merk::orderBy('merk_name')->get();
+
+        return Inertia::render('products/list-product', [
+            'products'   => $products,
+            'brands'     => $brands,
+            'categoryId' => $categoryId,
+        ]);
+    }
+    public function listAllProducts()
+    {
+        $products = Product::with(['merk', 'category'])->get();
+        $brands = Merk::orderBy('merk_name')->get();
+
+        return Inertia::render('products/list-product', [
+            'products' => $products,
+            'brands' => $brands,
         ]);
     }
 }

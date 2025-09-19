@@ -35,6 +35,7 @@ Route::middleware(['auth', "role:admin"])->group(function () {
 Route::get('/', [HomeController::class, 'homePage2'])->name('homepage');
 Route::controller(ProductController::class)->group(function () {
     Route::get('/detail_product/{id}', 'detailProduct')->name('products.show.details');
+    Route::get('/list_all',"listAllProducts")->name("product.list.all");
     Route::get('/list_product/{categoryId}', 'listProduct')->name('products.list.categories');
 });
 Route::controller(CartController::class)->group(function () {

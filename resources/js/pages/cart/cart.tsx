@@ -1,5 +1,5 @@
 import Footer from '@/components/Footer';
-import Header from '@/components/Header';
+import Header2 from '@/components/Header2';
 import { Button } from '@/components/ui/button';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Trash2 } from 'lucide-react';
@@ -153,7 +153,7 @@ export default function CartPage({ user, cart }: CartPageProps) {
     return (
         <div className="min-h-screen bg-white">
             <Head title="Keranjang" />
-            <Header user={user} cartItemCount={cartCount} />
+            <Header2 user={user} cartItemCount={cartCount} />
 
             <main className="mx-auto max-w-6xl px-4 py-6">
                 <h1 className="mb-6 text-2xl font-bold">Keranjang Belanja</h1>

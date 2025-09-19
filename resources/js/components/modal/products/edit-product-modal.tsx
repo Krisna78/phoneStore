@@ -85,7 +85,9 @@ export default function EditProductModal({ product, merk, category, onSuccess, t
                 setOpen(false);
                 setIsLoading(false);
                 try {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const updatedProduct = (page.props as any)?.products?.find(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (p: any) => String(p.id_product) === String(product.id_product),
                     );
                     if (onSuccess && updatedProduct) {
@@ -98,8 +100,11 @@ export default function EditProductModal({ product, merk, category, onSuccess, t
                 }
             },
             onError: (errors) => {
-                console.error('Update error:', errors);
-                toast.error('Gagal mengupdate produk.');
+                if (errors.name) {
+                    toast.error(errors.name);
+                } else {
+                    toast.error('Gagal mengupdate produk.');
+                }
             },
             onFinish: () => {
                 setIsLoading(false);

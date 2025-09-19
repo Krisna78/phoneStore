@@ -19,15 +19,15 @@ class Product extends Model
     ];
     public function merk(): BelongsTo
     {
-        return $this->belongsTo(Merk::class,'merk_id', 'id_merk');
+        return $this->belongsTo(Merk::class, 'merk_id', 'id_merk');
     }
     public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class,'category_id', 'id_category');
+        return $this->belongsTo(Category::class, 'category_id', 'id_category');
     }
-    public function invoiceDetail(): HasOne
+    public function invoiceDetail()
     {
-        return $this->hasOne(InvoiceDetail::class,'product_id', 'id_product');
+        return $this->hasMany(InvoiceDetail::class, 'product_id', 'id_product');
     }
     public function cartItems()
     {

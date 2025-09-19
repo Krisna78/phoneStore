@@ -3,7 +3,6 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
 import DeleteUser from '@/components/delete-user';
-import Header from '@/components/Header'; // untuk user biasa
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import type { SharedData } from '@/types';
+import Header2 from '@/components/Header2';
 
 type ProfileForm = {
     name: string;
@@ -33,6 +33,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
         });
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const roleNames = auth.user?.roles?.map((r: any) => r.name) || [];
     const isAdmin = roleNames.includes('admin');
 
@@ -118,7 +119,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
         <AppLayout breadcrumbs={[{ title: 'Profile', href: '/settings/profile' }]}>{PageContent}</AppLayout>
     ) : (
         <div>
-            <Header user={auth.user} />
+            <Header2 user={auth.user} />
             <main className="mx-auto max-w-3xl px-4 py-8">{PageContent}</main>
         </div>
     );

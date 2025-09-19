@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from './ui/button';
 
 type HeaderProps = {
-    user: { id: number; name: string; role?: string } | null;
+    user: { name: string; role?: string } | null;
     cartItemCount?: number;
     initialSearch?: string;
 };

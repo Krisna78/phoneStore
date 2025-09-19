@@ -8,9 +8,11 @@ use App\Models\Category;
 use App\Models\Invoice;
 use App\Models\InvoiceDetail;
 use App\Models\Product;
+use App\Models\Merk;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
@@ -28,11 +30,12 @@ class HomeController extends Controller
                         $q->where('category_name', 'like', "%{$search}%");
                     });
             })
-            ->limit(12)
             ->get();
+        $brand = Merk::select("id_merk","merk_name")->get();
 
         return Inertia::render('products/list-product', [
             'products' => $products,
+            'brands'   => $brand,
             'search'   => $search,
         ]);
     }
@@ -82,6 +85,7 @@ class HomeController extends Controller
             'categories'        => $categories,
             'productsByCategory' => $productsByCategory,
             'banners' => $banners,
+
         ]);
     }
     public function homePage2(Request $request)
@@ -90,27 +94,42 @@ class HomeController extends Controller
         $user   = auth()->user();
 
         $categories = Category::select('id_category', 'category_name', 'image')->get();
-        $productsByCategory = [];
-        $banners = Banners::all();
+        $banners    = Banners::all();
 
-        foreach ($categories as $category) {
-            $query = Product::with(['merk', 'category'])
-                ->whereHas('category', fn($q) => $q->where('category_name', $category->category_name))
-                ->latest()
-                ->limit(8);
-            if ($search) {
-                $query->where('name', 'like', "%{$search}%");
+        // Ambil invoice yang sudah dibayar beserta detail dan produk
+        $invoices = Invoice::with(['invoiceDetails.product'])
+            ->where('status', 'Sudah dibayar')
+            ->get();
+
+        // Hitung jumlah terjual per produk
+        $soldCountPerProduct = [];
+        foreach ($invoices as $invoice) {
+            foreach ($invoice->invoiceDetails as $detail) {
+                $productId = $detail->product_id;
+                $soldCountPerProduct[$productId] = ($soldCountPerProduct[$productId] ?? 0) + $detail->quantity;
             }
-            $productsByCategory[$category->category_name] = $query->get();
         }
+
+        // Ambil semua produk, optional filter search
+        $productsQuery = Product::with(['merk', 'category'])->latest();
+        if ($search) {
+            $productsQuery->where('name', 'like', "%{$search}%");
+        }
+
+        $products = $productsQuery->get()->map(function ($product) use ($soldCountPerProduct) {
+            $product->soldCount = $soldCountPerProduct[$product->id_product] ?? 0;
+            return $product;
+        });
+
         if ($user?->hasRole('admin')) {
             return redirect()->route('dashboard');
         }
+
         return Inertia::render('homePage2', [
-            'user'               => $user,
-            'categories'         => $categories,
-            'productsByCategory' => $productsByCategory,
-            'banners'            => $banners,
+            'user'       => $user,
+            'categories' => $categories,
+            'products'   => $products,
+            'banners'    => $banners,
         ]);
     }
 
@@ -152,13 +171,13 @@ class HomeController extends Controller
                     'price'    => null,
                     'brand'    => null,
                     'category' => null,
-                    'redirect'      => route('product.index', ['search' => $q]),
+                    'redirect' => route('products.index', ['search' => $q]),
                 ];
             }
 
             return response()->json($products);
         } catch (\Throwable $e) {
-            \Log::error('Search suggestions error: ' . $e->getMessage(), [
+            Log::error('Search suggestions error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
             return response()->json(['message' => 'Server error'], 500);

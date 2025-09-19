@@ -1,4 +1,3 @@
-import Header from '@/components/Header';
 import InputError from '@/components/input-error';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
@@ -11,9 +10,11 @@ import HeadingSmall from '@/components/heading-small';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import Header2 from '@/components/Header2';
 
 export default function Password() {
   const { auth } = usePage<SharedData>().props;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const roleNames = auth.user?.roles?.map((r: any) => r.name) || [];
   const isAdmin = roleNames.includes('admin');
 
@@ -123,7 +124,7 @@ export default function Password() {
         <AppLayout breadcrumbs={[{ title: 'Password settings', href: '/settings/password' }]}>{Content}</AppLayout>
     ) : (
         <div>
-            <Header user={auth.user} />
+            <Header2 user={auth.user} />
             <main className='mx-auto max-w-3xl px-4 py-8'>{Content}</main>
         </div>
     )
