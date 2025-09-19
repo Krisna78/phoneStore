@@ -158,7 +158,32 @@ export default function InvoiceTable({ invoices: initialInvoices, flash }: Invoi
         {
             accessorKey: 'payment_date',
             header: 'Tanggal Bayar',
-            cell: ({ row }) => row.getValue('payment_date') || '-',
+            cell: ({ row }) => {
+                const raw = row.getValue('invoice_date');
+                if (!raw) return '-';
+
+                const date = new Date(String(raw));
+                return date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                });
+            },
+        },
+        {
+            accessorKey: 'expire_date',
+            header: 'Batas Bayar',
+            cell: ({ row }) => {
+                const raw = row.getValue('invoice_date');
+                if (!raw) return '-';
+
+                const date = new Date(String(raw));
+                return date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                });
+            },
         },
         {
             accessorKey: 'checkout_link',

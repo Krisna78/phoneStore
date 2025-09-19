@@ -136,8 +136,7 @@ class ProductController extends Controller
     public function listProduct($categoryId)
     {
         $products = Product::with('merk', 'category')->where('category_id', $categoryId)->get();
-        // Ambil semua invoice "Sudah dibayar" yang berisi produk tersebut
-        $invoices = Invoice::with(['invoiceDetails.product'])
+        $invoices = Invoice::with(['invoiceDetail.product'])
             ->where('status', 'Sudah dibayar')
             ->get();
 

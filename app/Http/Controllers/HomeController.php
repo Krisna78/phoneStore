@@ -97,14 +97,14 @@ class HomeController extends Controller
         $banners    = Banners::all();
 
         // Ambil invoice yang sudah dibayar beserta detail dan produk
-        $invoices = Invoice::with(['invoiceDetails.product'])
+        $invoices = Invoice::with(['invoiceDetail.product'])
             ->where('status', 'Sudah dibayar')
             ->get();
 
         // Hitung jumlah terjual per produk
         $soldCountPerProduct = [];
         foreach ($invoices as $invoice) {
-            foreach ($invoice->invoiceDetails as $detail) {
+            foreach ($invoice->invoiceDetail as $detail) {
                 $productId = $detail->product_id;
                 $soldCountPerProduct[$productId] = ($soldCountPerProduct[$productId] ?? 0) + $detail->quantity;
             }

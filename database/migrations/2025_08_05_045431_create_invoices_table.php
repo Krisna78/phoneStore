@@ -19,6 +19,7 @@ return new class extends Migration
             $table->uuid('external_id')->unique();
             $table->integer('payment_amount');
             $table->date("payment_date");
+            $table->date("expire_date");
             $table->uuid('user_id');
             $table->foreign('user_id')->references('id_user')->on('users')->onDelete('cascade');
             $table->timestamps();

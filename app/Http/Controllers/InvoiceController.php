@@ -268,12 +268,13 @@ class InvoiceController extends Controller
             })
             ->latest()
             ->paginate(10)
-            ->appends(['status' => $status]) // penting supaya pagination bawa status
+            ->appends(['status' => $status])
             ->through(function ($invoice) {
                 return [
                     'id'      => $invoice->id_invoice,
                     'date'    => $invoice->invoice_date->format('d M Y'),
                     'status'  => $invoice->status,
+                    'checkout_link' => $invoice->checkout_link,
                     'invoice' => $invoice->external_id ?? $invoice->id_invoice,
                     'store'   => 'Toko Default',
                     'expire_date' => $invoice->expire_date ? $invoice->expire_date->format('d M Y H:i') : null,
@@ -294,5 +295,14 @@ class InvoiceController extends Controller
                 'status' => $status,
             ],
         ]);
+    }
+    public function redirectToPayment($id)
+    {
+        $transaction = Invoice::where('id_invoice', $id)->firstOrFail();
+        $checkoutLink = $transaction->checkout_link;
+        if (!$checkoutLink) {
+            abort(404, 'Link pembayaran tidak ditemukan');
+        }
+        return Inertia::location($checkoutLink);
     }
 }

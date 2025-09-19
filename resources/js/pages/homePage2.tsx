@@ -38,7 +38,6 @@ export default function Homepage2({ user, categories, banners, products }: Homep
     const smartphoneProducts = products.filter((p) => p.category.id_category === smartphoneCategory?.id_category).slice(0, 3);
     const tabletProducts = products.filter((p) => p.category.id_category === tabletCategory?.id_category).slice(0, 3);
     const laptopProducts = products.filter((p) => p.category.id_category === laptopCategory?.id_category).slice(0, 3);
-    console.log(products);
 
     return (
         <Layout>

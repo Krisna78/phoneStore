@@ -55,6 +55,7 @@ Route::controller(CategoryController::class)->group(function () {
 Route::get('/products', [HomeController::class, 'index'])->name('products.index');
 Route::get('/search-suggestions', [HomeController::class, 'suggestions'])->name('search.suggestions');
 Route::middleware(['auth'])->group(function () {
+    Route::get('/invoice/pay/{id}', [InvoiceController::class, 'redirectToPayment'])->name('invoice.redirect');
     Route::get('/purchase', [InvoiceController::class, 'purchase'])->name('invoice.purchase');
     Route::post('/invoices/{id}/cancel', [InvoiceController::class, 'cancelInvoice'])->name('invoice.cancel');
 });

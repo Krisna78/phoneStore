@@ -114,7 +114,7 @@ export default function Receipt({ invoice }: { invoice: Invoice }) {
           <Button
             variant="outline"
             className="flex-1"
-            onClick={() => router.visit("/")}
+            onClick={() => router.visit(route("homepage"))}
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Kembali
           </Button>
